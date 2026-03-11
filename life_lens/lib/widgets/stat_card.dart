@@ -1,6 +1,112 @@
 import 'package:flutter/material.dart';
 import '../utils/constants.dart';
 
+// ── Flux-style stat card (used in home 2x2 grid) ─────────────────────────
+class FluxStatCard extends StatelessWidget {
+  final String label;
+  final String value;
+  final String badge;
+  final bool badgePositive;
+  final IconData icon;
+  final Color color;
+  final VoidCallback? onTap;
+
+  const FluxStatCard({
+    super.key,
+    required this.label,
+    required this.value,
+    required this.badge,
+    required this.badgePositive,
+    required this.icon,
+    required this.color,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(AppSizes.padding),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppSizes.cardRadius),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha(10),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Icon + badge row
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: color.withAlpha(25),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(icon, size: 18, color: color),
+                ),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: badgePositive
+                        ? AppColors.primary
+                        : AppColors.tertiary.withAlpha(30),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    badge,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      color: badgePositive
+                          ? AppColors.primaryDark
+                          : AppColors.tertiary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const Spacer(),
+            // Big number
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 30,
+                fontWeight: FontWeight.w900,
+                color: AppColors.textPrimary,
+                letterSpacing: -1,
+                height: 1,
+              ),
+            ),
+            const SizedBox(height: 4),
+            // Label
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textMuted,
+                letterSpacing: 0.3,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Legacy StatCard (kept for other screens) ──────────────────────────────
 class StatCard extends StatelessWidget {
   final String label;
   final String value;
@@ -31,7 +137,7 @@ class StatCard extends StatelessWidget {
           border: Border.all(color: color.withAlpha(51), width: 1),
           boxShadow: [
             BoxShadow(
-              color: color.withAlpha(26),
+              color: color.withAlpha(20),
               blurRadius: 20,
               offset: const Offset(0, 4),
             ),
@@ -50,12 +156,6 @@ class StatCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: color,
                     shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: color.withAlpha(128),
-                        blurRadius: 6,
-                      ),
-                    ],
                   ),
                 ),
               ],
@@ -71,10 +171,7 @@ class StatCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 4),
-            Text(
-              label,
-              style: AppTextStyles.label,
-            ),
+            Text(label, style: AppTextStyles.label),
             if (subtitle != null) ...[
               const SizedBox(height: 4),
               Text(
@@ -91,6 +188,7 @@ class StatCard extends StatelessWidget {
   }
 }
 
+// ── ScoreRing ─────────────────────────────────────────────────────────────
 class ScoreRing extends StatelessWidget {
   final int score;
   final String label;
@@ -142,6 +240,7 @@ class ScoreRing extends StatelessWidget {
   }
 }
 
+// ── AppUsageBar ───────────────────────────────────────────────────────────
 class AppUsageBar extends StatelessWidget {
   final String appName;
   final int minutes;
@@ -171,8 +270,11 @@ class AppUsageBar extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(appName, style: AppTextStyles.body.copyWith(color: AppColors.textPrimary)),
-              Text(timeStr, style: AppTextStyles.label.copyWith(color: color)),
+              Text(appName,
+                  style: AppTextStyles.body
+                      .copyWith(color: AppColors.textPrimary)),
+              Text(timeStr,
+                  style: AppTextStyles.label.copyWith(color: color)),
             ],
           ),
           const SizedBox(height: 6),

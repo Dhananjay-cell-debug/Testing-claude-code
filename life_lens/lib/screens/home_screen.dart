@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import '../database/database_helper.dart';
@@ -27,7 +28,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   Map<String, int> _appUsage = {};
   DailySummary? _todaySummary;
   bool _isGeneratingSummary = false;
-  String _hourlyInsight = '';
   int _selectedNav = 0;
 
   late AnimationController _pulseController;
@@ -36,6 +36,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+    ));
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
@@ -43,7 +47,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     _pulseAnimation = Tween<double>(begin: 0.95, end: 1.05).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
-
     _loadData();
   }
 
@@ -56,11 +59,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   Future<void> _loadData() async {
     final prefs = await SharedPreferences.getInstance();
     final today = DateTime.now();
-
     final stats = await _db.getDayStats(today);
     final appUsage = await _db.getAppUsageForDay(today);
     final summary = await _db.getDailySummary(today);
-
     if (!mounted) return;
     setState(() {
       _todaySteps = prefs.getInt('today_steps') ?? (stats['total_steps'] as int);
@@ -69,13 +70,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       _appUsage = appUsage;
       _todaySummary = summary;
     });
-
-    // Load hourly insight
-    if (summary != null) {
-      setState(() {
-        _hourlyInsight = summary.insights.split('\n').first;
-      });
-    }
   }
 
   Future<void> _generateSummary() async {
@@ -120,316 +114,188 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildDashboard() {
-    final screenTimeHours = (_screenTimeMinutes / 60).toStringAsFixed(1);
     final now = DateTime.now();
     final greeting = _getGreeting(now.hour);
+    final screenTimeHours = (_screenTimeMinutes / 60).toStringAsFixed(1);
 
     return RefreshIndicator(
       onRefresh: _loadData,
-      color: AppColors.primary,
+      color: AppColors.primaryDark,
       backgroundColor: AppColors.surface,
       child: CustomScrollView(
         slivers: [
-          // Header
-          SliverToBoxAdapter(
-            child: Container(
-              padding: EdgeInsets.only(
-                top: MediaQuery.of(context).padding.top + 20,
-                left: AppSizes.padding,
-                right: AppSizes.padding,
-                bottom: AppSizes.padding,
-              ),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    AppColors.primary.withAlpha(26),
-                    AppColors.background,
-                  ],
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            greeting,
-                            style: AppTextStyles.label.copyWith(
-                              color: AppColors.primary,
-                              letterSpacing: 1.2,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            DateFormat('EEEE, MMM d').format(now),
-                            style: AppTextStyles.title,
-                          ),
-                        ],
-                      ),
-                      // Live tracker dot
-                      ScaleTransition(
-                        scale: _pulseAnimation,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: AppColors.scoreHigh.withAlpha(26),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: AppColors.scoreHigh.withAlpha(77),
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                width: 6,
-                                height: 6,
-                                decoration: BoxDecoration(
-                                  color: AppColors.scoreHigh,
-                                  shape: BoxShape.circle,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: AppColors.scoreHigh.withAlpha(128),
-                                      blurRadius: 6,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                'TRACKING',
-                                style: AppTextStyles.label.copyWith(
-                                  color: AppColors.scoreHigh,
-                                  fontSize: 10,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
+          SliverToBoxAdapter(child: _buildHeader(greeting, now)),
+          const SliverToBoxAdapter(child: SizedBox(height: AppSizes.gapM)),
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSizes.padding),
+            sliver: SliverToBoxAdapter(child: _buildHeroCard(screenTimeHours)),
           ),
-
-          // Stats grid
+          const SliverToBoxAdapter(child: SizedBox(height: 12)),
           SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: AppSizes.padding),
             sliver: SliverGrid(
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
-                childAspectRatio: 1.1,
+                childAspectRatio: 1.05,
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
               ),
               delegate: SliverChildListDelegate([
-                StatCard(
-                  emoji: '📱',
-                  label: 'SCREEN TIME',
-                  value: '${screenTimeHours}h',
-                  subtitle: '$_phonePickups pickups today',
-                  color: _screenTimeMinutes > 240 ? AppColors.tertiary : AppColors.primary,
-                ),
-                StatCard(
-                  emoji: '👟',
-                  label: 'STEPS',
+                FluxStatCard(
+                  label: 'Steps',
                   value: NumberFormat('#,###').format(_todaySteps),
-                  subtitle: _todaySteps >= 10000
-                      ? 'Goal reached!'
-                      : '${10000 - _todaySteps} to goal',
-                  color: _todaySteps >= 10000
-                      ? AppColors.scoreHigh
-                      : _todaySteps >= 5000
-                          ? AppColors.scoreMid
-                          : AppColors.tertiary,
+                  badge: _todaySteps >= 10000
+                      ? '+Goal!'
+                      : '${((_todaySteps / 10000) * 100).toStringAsFixed(0)}%',
+                  badgePositive: _todaySteps >= 5000,
+                  icon: Icons.directions_walk_rounded,
+                  color: AppColors.secondary,
                 ),
-                StatCard(
-                  emoji: '🔄',
-                  label: 'PICKUPS',
+                FluxStatCard(
+                  label: 'Pickups',
                   value: '$_phonePickups',
-                  subtitle: _phonePickups > 80
-                      ? 'Very distracted'
+                  badge: _phonePickups > 80
+                      ? 'High'
                       : _phonePickups > 40
-                          ? 'Somewhat distracted'
-                          : 'Good focus!',
+                          ? 'Mid'
+                          : 'Low',
+                  badgePositive: _phonePickups <= 40,
+                  icon: Icons.phone_android_rounded,
                   color: _phonePickups > 80
                       ? AppColors.tertiary
                       : _phonePickups > 40
                           ? AppColors.scoreMid
                           : AppColors.scoreHigh,
                 ),
-                StatCard(
-                  emoji: '🧠',
-                  label: 'AI SCORE',
-                  value: _todaySummary != null ? '${_todaySummary!.productivityScore}' : '--',
-                  subtitle: _todaySummary?.productivityLabel ?? 'Tap to generate',
-                  color: AppColors.secondary,
+                FluxStatCard(
+                  label: 'AI Score',
+                  value: _todaySummary != null
+                      ? '${_todaySummary!.productivityScore}'
+                      : '--',
+                  badge: _todaySummary?.productivityLabel ?? 'Tap',
+                  badgePositive: (_todaySummary?.productivityScore ?? 0) >= 60,
+                  icon: Icons.auto_awesome_rounded,
+                  color: AppColors.secondaryDark,
                   onTap: _todaySummary == null ? _generateSummary : null,
+                ),
+                FluxStatCard(
+                  label: 'Wellbeing',
+                  value: _todaySummary != null
+                      ? '${_todaySummary!.wellbeingScore}%'
+                      : '--',
+                  badge: _todaySummary != null
+                      ? (_todaySummary!.wellbeingScore >= 70 ? '+Good' : 'Check')
+                      : 'Pending',
+                  badgePositive: (_todaySummary?.wellbeingScore ?? 0) >= 70,
+                  icon: Icons.favorite_rounded,
+                  color: AppColors.scoreHigh,
                 ),
               ]),
             ),
           ),
-
-          const SliverToBoxAdapter(child: SizedBox(height: AppSizes.gapL)),
-
-          // AI Summary card
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSizes.padding),
-            sliver: SliverToBoxAdapter(
-              child: _buildAiSummaryCard(),
-            ),
-          ),
-
-          const SliverToBoxAdapter(child: SizedBox(height: AppSizes.gapM)),
-
-          // App usage breakdown
+          const SliverToBoxAdapter(child: SizedBox(height: 12)),
           if (_appUsage.isNotEmpty)
             SliverPadding(
               padding: const EdgeInsets.symmetric(horizontal: AppSizes.padding),
-              sliver: SliverToBoxAdapter(
-                child: _buildAppUsageCard(),
-              ),
+              sliver: SliverToBoxAdapter(child: _buildActivityCard()),
             ),
-
+          const SliverToBoxAdapter(child: SizedBox(height: 12)),
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSizes.padding),
+            sliver: SliverToBoxAdapter(child: _buildAiBriefCard()),
+          ),
           const SliverToBoxAdapter(child: SizedBox(height: 100)),
         ],
       ),
     );
   }
 
-  Widget _buildAiSummaryCard() {
+  Widget _buildHeader(String greeting, DateTime now) {
     return Container(
-      padding: const EdgeInsets.all(AppSizes.padding),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppColors.primary.withAlpha(30),
-            AppColors.surface,
-          ],
-        ),
-        borderRadius: BorderRadius.circular(AppSizes.cardRadius),
-        border: Border.all(color: AppColors.primary.withAlpha(51)),
+      color: AppColors.background,
+      padding: EdgeInsets.only(
+        top: MediaQuery.of(context).padding.top + 16,
+        left: AppSizes.padding,
+        right: AppSizes.padding,
+        bottom: 12,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Row(
-            children: [
-              const Text('🤖', style: TextStyle(fontSize: 20)),
-              const SizedBox(width: 8),
-              Text(
-                'AI DAILY BRIEF',
-                style: AppTextStyles.label.copyWith(color: AppColors.primary),
-              ),
-              const Spacer(),
-              if (_todaySummary != null)
-                Row(
-                  children: [
-                    ScoreRing(
-                      score: _todaySummary!.productivityScore,
-                      label: 'FOCUS',
-                      color: AppColors.secondary,
-                      size: 48,
-                    ),
-                    const SizedBox(width: 12),
-                    ScoreRing(
-                      score: _todaySummary!.wellbeingScore,
-                      label: 'WELL',
-                      color: AppColors.scoreHigh,
-                      size: 48,
-                    ),
-                  ],
+          Container(
+            width: 44,
+            height: 44,
+            decoration: const BoxDecoration(
+              color: AppColors.secondary,
+              shape: BoxShape.circle,
+            ),
+            child: const Center(
+              child: Text(
+                'LL',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.secondaryDark,
+                  letterSpacing: 0.5,
                 ),
-            ],
+              ),
+            ),
           ),
-          const SizedBox(height: AppSizes.gapM),
-          if (_isGeneratingSummary)
-            const Center(
-              child: Column(
-                children: [
-                  CircularProgressIndicator(color: AppColors.primary),
-                  SizedBox(height: 12),
-                  Text('Claude is analyzing your day...', style: AppTextStyles.body),
-                ],
-              ),
-            )
-          else if (_todaySummary != null) ...[
-            Text(
-              _todaySummary!.narrative,
-              style: AppTextStyles.body.copyWith(color: AppColors.textPrimary),
-            ),
-            const SizedBox(height: AppSizes.gapM),
-            _buildInsightChip(_todaySummary!.recommendations.split('\n').first),
-            const SizedBox(height: AppSizes.gapM),
-            TextButton.icon(
-              onPressed: _generateSummary,
-              icon: const Icon(Icons.refresh, size: 16, color: AppColors.primary),
-              label: Text(
-                'Regenerate',
-                style: AppTextStyles.label.copyWith(color: AppColors.primary),
-              ),
-            ),
-          ] else
-            Column(
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Tap below to get Claude\'s analysis of your day so far.',
-                  style: AppTextStyles.body,
+                  greeting,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textMuted,
+                    letterSpacing: 0.5,
+                  ),
                 ),
-                const SizedBox(height: AppSizes.gapM),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _generateSummary,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: const Text(
-                      'Analyze My Day ✨',
-                      style: TextStyle(fontWeight: FontWeight.w700),
-                    ),
+                const SizedBox(height: 1),
+                Text(
+                  DateFormat('EEEE, MMM d').format(now),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
                   ),
                 ),
               ],
             ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInsightChip(String text) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: AppColors.secondary.withAlpha(26),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.secondary.withAlpha(77)),
-      ),
-      child: Row(
-        children: [
-          const Text('💡', style: TextStyle(fontSize: 14)),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              text,
-              style: AppTextStyles.body.copyWith(
-                color: AppColors.secondary,
-                fontSize: 12,
+          ),
+          ScaleTransition(
+            scale: _pulseAnimation,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: AppColors.primary,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 6,
+                    height: 6,
+                    decoration: const BoxDecoration(
+                      color: AppColors.primaryDark,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 5),
+                  const Text(
+                    'LIVE',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.primaryDark,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -438,48 +304,331 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildAppUsageCard() {
-    final topApps = _appUsage.entries.take(5).toList();
-    final maxMinutes = topApps.isNotEmpty ? topApps.first.value : 1;
-
-    final categoryColors = <String, Color>{};
+  Widget _buildHeroCard(String screenTimeHours) {
+    final screenDouble = double.tryParse(screenTimeHours) ?? 0.0;
+    final dailyMax = 10.0;
+    final pickupFrac = (_phonePickups / 150.0).clamp(0.0, 1.0);
+    final screenFrac = (screenDouble / dailyMax).clamp(0.0, 1.0);
 
     return Container(
       padding: const EdgeInsets.all(AppSizes.padding),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppSizes.cardRadius),
-        border: Border.all(color: AppColors.border),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(13),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Row(
+                children: [
+                  Icon(Icons.phone_android_rounded,
+                      size: 18, color: AppColors.textMuted),
+                  SizedBox(width: 6),
+                  Text(
+                    'Screen Time',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  screenDouble > 6 ? 'High' : screenDouble > 3 ? 'Avg' : '+Low',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.primaryDark,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                screenTimeHours,
+                style: const TextStyle(
+                  fontSize: 56,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.textPrimary,
+                  letterSpacing: -3,
+                  height: 1,
+                ),
+              ),
+              const Padding(
+                padding: EdgeInsets.only(bottom: 8, left: 4),
+                child: Text(
+                  'hrs today',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textMuted,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            height: 110,
+            child: Stack(
+              children: [
+                Positioned(
+                  left: 0,
+                  top: 0,
+                  child: _buildBubble(
+                    size: 100,
+                    color: AppColors.secondary,
+                    label: '${screenTimeHours}h',
+                    sublabel: 'screen',
+                  ),
+                ),
+                Positioned(
+                  left: 75,
+                  top: 15,
+                  child: _buildBubble(
+                    size: 80,
+                    color: AppColors.textPrimary,
+                    label: '$_phonePickups',
+                    sublabel: 'picks',
+                  ),
+                ),
+                Positioned(
+                  left: 148,
+                  top: 35,
+                  child: _buildBubble(
+                    size: 62,
+                    color: AppColors.primary,
+                    label: '${(_todaySteps / 1000).toStringAsFixed(1)}k',
+                    sublabel: 'steps',
+                    textDark: true,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          _buildMiniProgress('Screen Time', screenFrac,
+              '${screenTimeHours}h / ${dailyMax.toInt()}h', AppColors.secondary),
+          const SizedBox(height: 8),
+          _buildMiniProgress('Phone Pickups', pickupFrac,
+              '$_phonePickups / 150', AppColors.textPrimary),
+          const SizedBox(height: 8),
+          _buildMiniProgress(
+            'Step Goal',
+            (_todaySteps / 10000.0).clamp(0.0, 1.0),
+            '${NumberFormat('#,###').format(_todaySteps)} / 10,000',
+            AppColors.primary,
+            textDark: true,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBubble({
+    required double size,
+    required Color color,
+    required String label,
+    required String sublabel,
+    bool textDark = false,
+  }) {
+    final textColor = textDark ? AppColors.primaryDark : Colors.white;
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: size * 0.22,
+              fontWeight: FontWeight.w900,
+              color: textColor,
+              height: 1,
+            ),
+          ),
+          Text(
+            sublabel,
+            style: TextStyle(
+              fontSize: size * 0.14,
+              fontWeight: FontWeight.w500,
+              color: textColor.withAlpha(180),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMiniProgress(
+      String label, double value, String trailing, Color color,
+      {bool textDark = false}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(label,
+                style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary)),
+            Text(
+              trailing,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: textDark ? AppColors.primaryDark : color,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 5),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(6),
+          child: LinearProgressIndicator(
+            value: value,
+            backgroundColor: color.withAlpha(40),
+            valueColor: AlwaysStoppedAnimation<Color>(color),
+            minHeight: 8,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActivityCard() {
+    final topApps = _appUsage.entries.take(4).toList();
+    final maxMinutes = topApps.isNotEmpty ? topApps.first.value : 1;
+    final barColors = [
+      AppColors.secondary,
+      AppColors.secondaryDark,
+      AppColors.scoreMid,
+      AppColors.tertiary,
+    ];
+
+    return Container(
+      padding: const EdgeInsets.all(AppSizes.padding),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppSizes.cardRadius),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withAlpha(10),
+              blurRadius: 16,
+              offset: const Offset(0, 4)),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Text('📱', style: TextStyle(fontSize: 20)),
-              const SizedBox(width: 8),
-              Text(
-                'TOP APPS TODAY',
-                style: AppTextStyles.label,
+              const Icon(Icons.grid_view_rounded,
+                  size: 18, color: AppColors.textMuted),
+              const SizedBox(width: 6),
+              const Text(
+                'Top Apps Today',
+                style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textSecondary),
               ),
+              const Spacer(),
+              Text('${topApps.length} apps',
+                  style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textMuted,
+                      fontWeight: FontWeight.w500)),
             ],
           ),
           const SizedBox(height: AppSizes.gapM),
           ...topApps.asMap().entries.map((entry) {
-            final idx = entry.key;
             final app = entry.value;
-            final colors = [
-              AppColors.social,
-              AppColors.primary,
-              AppColors.secondary,
-              AppColors.scoreMid,
-              AppColors.tertiary,
-            ];
-            return AppUsageBar(
-              appName: app.key,
-              minutes: app.value,
-              maxMinutes: maxMinutes,
-              color: colors[idx % colors.length],
+            final color = barColors[entry.key % barColors.length];
+            final frac = maxMinutes > 0 ? app.value / maxMinutes : 0.0;
+            final h = app.value ~/ 60;
+            final m = app.value % 60;
+            final timeStr = h > 0 ? '${h}h ${m}m' : '${m}m';
+            final pct = ((app.value /
+                        (_screenTimeMinutes > 0 ? _screenTimeMinutes : 1)) *
+                    100)
+                .toStringAsFixed(0);
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(app.key,
+                          style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary)),
+                      Row(
+                        children: [
+                          Text(timeStr,
+                              style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: color)),
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 5, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: color.withAlpha(30),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text('$pct%',
+                                style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                    color: color)),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(6),
+                    child: LinearProgressIndicator(
+                      value: frac.clamp(0.0, 1.0),
+                      backgroundColor: color.withAlpha(30),
+                      valueColor: AlwaysStoppedAnimation<Color>(color),
+                      minHeight: 8,
+                    ),
+                  ),
+                ],
+              ),
             );
           }),
         ],
@@ -487,37 +636,256 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
+  Widget _buildAiBriefCard() {
+    return Container(
+      padding: const EdgeInsets.all(AppSizes.padding),
+      decoration: BoxDecoration(
+        color: AppColors.navBackground,
+        borderRadius: BorderRadius.circular(AppSizes.cardRadius),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withAlpha(40),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.auto_awesome_rounded,
+                    size: 18, color: AppColors.primary),
+              ),
+              const SizedBox(width: 10),
+              const Text(
+                'AI Daily Brief',
+                style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textOnDark),
+              ),
+              const Spacer(),
+              if (_todaySummary != null)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withAlpha(40),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Text(
+                    'Today',
+                    style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primary),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: AppSizes.gapM),
+          if (_todaySummary != null) ...[
+            Row(
+              children: [
+                _buildDarkStat('${_todaySummary!.productivityScore}',
+                    'Focus Score', AppColors.primary),
+                const SizedBox(width: 24),
+                _buildDarkStat('${_todaySummary!.wellbeingScore}%',
+                    'Wellbeing', AppColors.secondary),
+              ],
+            ),
+            const SizedBox(height: AppSizes.gapM),
+            _buildMiniBarChart(),
+            const SizedBox(height: AppSizes.gapM),
+            Text(
+              _todaySummary!.narrative,
+              style: const TextStyle(
+                  fontSize: 13,
+                  color: AppColors.textMutedDark,
+                  height: 1.5),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 12),
+            GestureDetector(
+              onTap: _generateSummary,
+              child: const Row(
+                children: [
+                  Icon(Icons.refresh_rounded,
+                      size: 14, color: AppColors.primary),
+                  SizedBox(width: 4),
+                  Text('Regenerate',
+                      style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary)),
+                ],
+              ),
+            ),
+          ] else if (_isGeneratingSummary) ...[
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: Column(
+                  children: [
+                    CircularProgressIndicator(color: AppColors.primary),
+                    SizedBox(height: 12),
+                    Text('Claude is analyzing your day...',
+                        style: TextStyle(
+                            color: AppColors.textMutedDark, fontSize: 13)),
+                  ],
+                ),
+              ),
+            ),
+          ] else ...[
+            const Text(
+              'Get Claude\'s analysis of your day',
+              style: TextStyle(
+                  fontSize: 13, color: AppColors.textMutedDark, height: 1.5),
+            ),
+            const SizedBox(height: AppSizes.gapM),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _generateSummary,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: AppColors.primaryDark,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                  elevation: 0,
+                ),
+                child: const Text(
+                  'Analyze My Day',
+                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDarkStat(String value, String label, Color color) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              width: 3,
+              height: 18,
+              decoration:
+                  BoxDecoration(color: color, borderRadius: BorderRadius.circular(2)),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              value,
+              style: const TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.textOnDark,
+                  letterSpacing: -1),
+            ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 11),
+          child: Text(label,
+              style: const TextStyle(
+                  fontSize: 12,
+                  color: AppColors.textMutedDark,
+                  fontWeight: FontWeight.w500)),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMiniBarChart() {
+    final days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    final todayIdx = DateTime.now().weekday - 1;
+    final heights = [0.4, 0.6, 0.5, 0.7, 0.45, 0.3, 0.0];
+    heights[todayIdx] = (_screenTimeMinutes / (10 * 60)).clamp(0.1, 1.0);
+
+    return SizedBox(
+      height: 70,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: days.asMap().entries.map((e) {
+          final isToday = e.key == todayIdx;
+          return Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 3),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Container(
+                    height: 48 * heights[e.key],
+                    decoration: BoxDecoration(
+                      color: isToday
+                          ? AppColors.primary
+                          : AppColors.secondary.withAlpha(60),
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    e.value,
+                    style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w600,
+                        color: isToday
+                            ? AppColors.primary
+                            : AppColors.textMutedDark),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
   Widget _buildNavBar() {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        border: Border(top: BorderSide(color: AppColors.border, width: 0.5)),
+        color: AppColors.navBackground,
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withAlpha(40),
+              blurRadius: 20,
+              offset: const Offset(0, -4)),
+        ],
       ),
       child: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _NavItem(
-                icon: Icons.home_rounded,
-                label: 'Home',
+              _FluxNavItem(
+                icon: Icons.grid_view_rounded,
+                label: 'Dashboard',
                 selected: _selectedNav == 0,
                 onTap: () => setState(() => _selectedNav = 0),
               ),
-              _NavItem(
+              _FluxNavItem(
                 icon: Icons.timeline_rounded,
                 label: 'Timeline',
                 selected: _selectedNav == 1,
                 onTap: () => setState(() => _selectedNav = 1),
               ),
-              _NavItem(
+              _FluxNavItem(
                 icon: Icons.auto_awesome_rounded,
                 label: 'Insights',
                 selected: _selectedNav == 2,
                 onTap: () => setState(() => _selectedNav = 2),
               ),
-              _NavItem(
+              _FluxNavItem(
                 icon: Icons.settings_rounded,
                 label: 'Settings',
                 selected: _selectedNav == 3,
@@ -531,21 +899,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   String _getGreeting(int hour) {
-    if (hour < 5) return 'GOOD NIGHT';
-    if (hour < 12) return 'GOOD MORNING';
-    if (hour < 17) return 'GOOD AFTERNOON';
-    if (hour < 21) return 'GOOD EVENING';
-    return 'GOOD NIGHT';
+    if (hour < 5) return 'Good Night';
+    if (hour < 12) return 'Good Morning';
+    if (hour < 17) return 'Good Afternoon';
+    if (hour < 21) return 'Good Evening';
+    return 'Good Night';
   }
 }
 
-class _NavItem extends StatelessWidget {
+class _FluxNavItem extends StatelessWidget {
   final IconData icon;
   final String label;
   final bool selected;
   final VoidCallback onTap;
 
-  const _NavItem({
+  const _FluxNavItem({
     required this.icon,
     required this.label,
     required this.selected,
@@ -560,24 +928,26 @@ class _NavItem extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: selected ? AppColors.primary.withAlpha(26) : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
+          color:
+              selected ? AppColors.primary.withAlpha(30) : Colors.transparent,
+          borderRadius: BorderRadius.circular(14),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               icon,
-              color: selected ? AppColors.primary : AppColors.textMuted,
               size: 22,
+              color: selected ? AppColors.primary : AppColors.textMutedDark,
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 3),
             Text(
               label,
               style: TextStyle(
                 fontSize: 10,
-                fontWeight: FontWeight.w600,
-                color: selected ? AppColors.primary : AppColors.textMuted,
+                fontWeight: FontWeight.w700,
+                color:
+                    selected ? AppColors.primary : AppColors.textMutedDark,
               ),
             ),
           ],
