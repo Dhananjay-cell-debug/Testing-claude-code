@@ -1,0 +1,75 @@
+name: life_lens
+description: LifeLens - Your Personal Life Intelligence System
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.2.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Background service - keeps running 24/7
+  flutter_background_service: ^5.0.5
+
+  # App usage stats (which apps you used, when, how long)
+  app_usage: ^3.0.0
+
+  # Location tracking
+  geolocator: ^13.0.1
+  geocoding: ^3.0.0
+
+  # Database - stores all your life events locally
+  sqflite: ^2.3.3+1
+  path: ^1.9.0
+
+  # HTTP for Claude API calls
+  http: ^1.2.1
+
+  # Charts for beautiful visualization
+  fl_chart: ^0.69.0
+
+  # Permissions
+  permission_handler: ^11.3.1
+
+  # Local notifications
+  flutter_local_notifications: ^17.2.2
+
+  # Shared prefs for settings
+  shared_preferences: ^2.3.2
+
+  # Date/time formatting
+  intl: ^0.19.0
+
+  # Device info
+  device_info_plus: ^10.1.0
+
+  # Network connectivity (WiFi detection)
+  connectivity_plus: ^6.0.5
+
+  # Icons
+  cupertino_icons: ^1.0.8
+
+  # Step counter / activity
+  pedometer: ^4.0.1
+
+  # Timeline UI
+  timeline_tile: ^2.0.0
+
+  # Shimmer loading effect
+  shimmer: ^3.0.0
+
+  # Lottie animations
+  lottie: ^3.1.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/animations/
+    - assets/images/
