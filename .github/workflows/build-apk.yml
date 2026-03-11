@@ -1,0 +1,87 @@
+name: Build LifeLens APK
+
+on:
+  push:
+    branches: [ main, master, "claude/*" ]
+  workflow_dispatch:  # Manual trigger button in GitHub UI
+
+jobs:
+  build-apk:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Get the code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Setup Java (required for Android builds)
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      # 3. Setup Flutter
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: 'stable'
+          cache: true
+
+      # 4. Install dependencies
+      - name: Install dependencies
+        working-directory: life_lens
+        run: flutter pub get
+
+      # 5. Analyze code (non-blocking)
+      - name: Analyze code
+        working-directory: life_lens
+        run: flutter analyze --no-fatal-infos || true
+
+      # 6. Build the APK
+      - name: Build release APK
+        working-directory: life_lens
+        run: |
+          flutter build apk --release \
+            --no-shrink \
+            --build-name=1.0.0 \
+            --build-number=${{ github.run_number }}
+
+      # 7. Build debug APK too (easier to install, no signing needed)
+      - name: Build debug APK
+        working-directory: life_lens
+        run: flutter build apk --debug
+
+      # 8. Upload APKs as downloadable artifacts
+      - name: Upload Release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: LifeLens-release-v1.0.${{ github.run_number }}
+          path: life_lens/build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 30
+
+      - name: Upload Debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: LifeLens-debug-v1.0.${{ github.run_number }}
+          path: life_lens/build/app/outputs/flutter-apk/app-debug.apk
+          retention-days: 30
+
+      # 9. Show download info in the log
+      - name: Build complete!
+        run: |
+          echo "========================================"
+          echo " LifeLens APK Build Complete!"
+          echo "========================================"
+          echo ""
+          echo " Download the APK from the Actions tab:"
+          echo " GitHub repo → Actions → This run → Artifacts"
+          echo ""
+          echo " Install on Android:"
+          echo " 1. Download APK to your phone"
+          echo " 2. Tap the file to install"
+          echo " 3. Allow 'Install unknown apps' if prompted"
+          echo " 4. Settings → Apps → Usage Access → LifeLens → ON"
+          echo "========================================"
