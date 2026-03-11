@@ -26,30 +26,33 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.0'
+          flutter-version: '3.24.5'
           channel: 'stable'
           cache: true
 
-      # 4. Install dependencies
+      # 4. Accept Android licenses
+      - name: Accept Android licenses
+        run: yes | flutter doctor --android-licenses || true
+
+      # 5. Install dependencies
       - name: Install dependencies
         working-directory: life_lens
         run: flutter pub get
 
-      # 5. Analyze code (non-blocking)
+      # 6. Analyze code (non-blocking)
       - name: Analyze code
         working-directory: life_lens
         run: flutter analyze --no-fatal-infos || true
 
-      # 6. Build the APK
+      # 7. Build the APK
       - name: Build release APK
         working-directory: life_lens
         run: |
           flutter build apk --release \
-            --no-shrink \
             --build-name=1.0.0 \
             --build-number=${{ github.run_number }}
 
-      # 7. Build debug APK too (easier to install, no signing needed)
+      # 8. Build debug APK too (easier to install, no signing needed)
       - name: Build debug APK
         working-directory: life_lens
         run: flutter build apk --debug
