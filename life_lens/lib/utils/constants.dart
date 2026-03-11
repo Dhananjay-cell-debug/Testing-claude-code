@@ -6,7 +6,6 @@ class AppColors {
   static const surface = Color(0xFFFFFFFF);
   static const surfaceVariant = Color(0xFFF8F8FC);
   static const navBackground = Color(0xFF12122A); // Dark nav
-  static const surfaceVariant = Color(0xFFF0F0F8);
   static const border = Color(0xFFE8E8F0);
 
   // Accent colors
