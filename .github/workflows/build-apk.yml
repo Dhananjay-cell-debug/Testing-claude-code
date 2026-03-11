@@ -72,19 +72,29 @@ jobs:
           path: life_lens/build/app/outputs/flutter-apk/app-debug.apk
           retention-days: 30
 
-      # 9. Show download info in the log
+      # 9. Upload to Firebase App Distribution (auto-notify testers)
+      - name: Upload to Firebase App Distribution
+        if: ${{ secrets.FIREBASE_APP_ID != '' }}
+        uses: wzieba/Firebase-Distribution-Github-Action@v1
+        with:
+          appId: ${{ secrets.FIREBASE_APP_ID }}
+          serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          groups: testers
+          file: life_lens/build/app/outputs/flutter-apk/app-debug.apk
+          releaseNotes: "Build #${{ github.run_number }} - ${{ github.event.head_commit.message }}"
+
+      # 10. Show download info in the log
       - name: Build complete!
         run: |
           echo "========================================"
           echo " LifeLens APK Build Complete!"
           echo "========================================"
           echo ""
-          echo " Download the APK from the Actions tab:"
-          echo " GitHub repo → Actions → This run → Artifacts"
+          echo " GitHub Artifacts: Actions tab → This run → Artifacts"
+          echo " Firebase: Check your email for install link!"
           echo ""
           echo " Install on Android:"
-          echo " 1. Download APK to your phone"
-          echo " 2. Tap the file to install"
-          echo " 3. Allow 'Install unknown apps' if prompted"
-          echo " 4. Settings → Apps → Usage Access → LifeLens → ON"
+          echo " 1. Open install link from email OR download APK"
+          echo " 2. Allow 'Install unknown apps' if prompted"
+          echo " 3. Settings → Apps → Usage Access → LifeLens → ON"
           echo "========================================"
