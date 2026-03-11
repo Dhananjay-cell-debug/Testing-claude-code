@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>LifeLens</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #F0F0F7;
+    --surface: #FFFFFF;
+    --surfaceVariant: #F8F8FC;
+    --navBg: #12122A;
+    --border: #E8E8F0;
+    --primary: #C5F135;
+    --primaryDark: #9DC200;
+    --secondary: #B4AEFF;
+    --secondaryDark: #6C63FF;
+    --tertiary: #FF6B6B;
+    --scoreHigh: #00C48C;
+    --scoreMid: #FFB020;
+    --scoreLow: #FF5252;
+    --social: #FF6B9D;
+    --productive: #00C48C;
+    --entertainment: #FF9800;
+    --messaging: #64B5F6;
+    --textPrimary: #12122A;
+    --textSecondary: #6B6B8A;
+    --textMuted: #9999B3;
+    --textOnDark: #F0F0F8;
+    --textMutedDark: #7070A0;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--textPrimary);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+  }
+
+  /* Phone frame */
+  .phone {
+    width: 390px;
+    min-height: 100vh;
+    background: var(--bg);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Status bar */
+  .status-bar {
+    background: var(--bg);
+    padding: 12px 20px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--textPrimary);
+  }
+  .status-right { display: flex; gap: 6px; align-items: center; }
+
+  /* Screen container */
+  .screen { display: none; flex-direction: column; flex: 1; padding-bottom: 80px; }
+  .screen.active { display: flex; }
+
+  /* ===================== HOME SCREEN ===================== */
+  .home-header {
+    padding: 16px 20px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .home-header-left h2 {
+    font-size: 12px; font-weight: 600; color: var(--textMuted);
+    letter-spacing: 0.8px; text-transform: uppercase;
+  }
+  .home-header-left .date {
+    font-size: 22px; font-weight: 800; color: var(--textPrimary); letter-spacing: -0.5px;
+  }
+  .live-badge {
+    background: var(--primary); color: var(--textPrimary);
+    font-size: 10px; font-weight: 700; padding: 4px 10px;
+    border-radius: 20px; letter-spacing: 0.5px;
+    display: flex; align-items: center; gap: 5px;
+    animation: pulse-badge 2s infinite;
+  }
+  .live-dot { width: 6px; height: 6px; background: var(--textPrimary); border-radius: 50%; }
+  @keyframes pulse-badge { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
+
+  /* Score cards */
+  .scores-row {
+    display: flex; gap: 12px; padding: 0 20px 16px;
+  }
+  .score-card {
+    flex: 1; background: var(--navBg); border-radius: 20px;
+    padding: 16px; text-align: center; position: relative; overflow: hidden;
+  }
+  .score-card::before {
+    content: ''; position: absolute; top: -20px; right: -20px;
+    width: 80px; height: 80px; border-radius: 50%;
+    background: rgba(197,241,53,0.08);
+  }
+  .score-label { font-size: 10px; font-weight: 600; color: var(--textMutedDark); letter-spacing: 0.8px; text-transform: uppercase; }
+  .score-number { font-size: 42px; font-weight: 900; letter-spacing: -2px; line-height: 1; margin: 4px 0; }
+  .score-number.high { color: var(--scoreHigh); }
+  .score-number.mid { color: var(--scoreMid); }
+  .score-sub { font-size: 11px; color: var(--textMutedDark); font-weight: 500; }
+
+  /* Stats grid */
+  .stats-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+    padding: 0 20px 16px;
+  }
+  .stat-card {
+    background: var(--surface); border-radius: 20px; padding: 16px;
+    border: 1.5px solid var(--border); position: relative; overflow: hidden;
+  }
+  .stat-card.accent { background: var(--navBg); border-color: transparent; }
+  .stat-icon { font-size: 22px; margin-bottom: 8px; }
+  .stat-value { font-size: 28px; font-weight: 900; color: var(--textPrimary); letter-spacing: -1px; }
+  .stat-card.accent .stat-value { color: var(--textOnDark); }
+  .stat-label { font-size: 11px; color: var(--textMuted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+  .stat-card.accent .stat-label { color: var(--textMutedDark); }
+
+  /* AI Summary card */
+  .ai-card {
+    margin: 0 20px 16px;
+    background: var(--surface); border-radius: 20px;
+    border: 1.5px solid var(--border); overflow: hidden;
+  }
+  .ai-card-header {
+    padding: 14px 16px 10px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .ai-label { font-size: 11px; font-weight: 700; color: var(--textMuted); letter-spacing: 0.8px; text-transform: uppercase; }
+  .ai-badge {
+    background: var(--primary); color: var(--textPrimary);
+    font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 10px;
+  }
+  .ai-content { padding: 0 16px 16px; }
+  .ai-narrative {
+    font-size: 13px; color: var(--textSecondary); line-height: 1.7;
+    font-weight: 400;
+  }
+  .ai-generate-btn {
+    width: 100%; margin-top: 12px; padding: 12px;
+    background: var(--primary); color: var(--textPrimary);
+    border: none; border-radius: 12px; font-size: 13px; font-weight: 700;
+    cursor: pointer; transition: transform 0.15s;
+  }
+  .ai-generate-btn:hover { transform: scale(0.98); background: var(--primaryDark); }
+
+  /* Top apps */
+  .section-title {
+    padding: 0 20px 10px;
+    font-size: 11px; font-weight: 700; color: var(--textMuted);
+    letter-spacing: 0.8px; text-transform: uppercase;
+  }
+  .app-bar-row {
+    padding: 0 20px; margin-bottom: 6px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .app-bar-icon { font-size: 18px; width: 32px; text-align: center; }
+  .app-bar-info { flex: 1; }
+  .app-bar-name { font-size: 13px; font-weight: 600; color: var(--textPrimary); }
+  .app-bar-bg { height: 6px; background: var(--border); border-radius: 3px; margin-top: 4px; overflow: hidden; }
+  .app-bar-fill { height: 100%; border-radius: 3px; }
+  .app-bar-time { font-size: 12px; font-weight: 600; color: var(--textSecondary); white-space: nowrap; }
+
+  /* ===================== TIMELINE SCREEN ===================== */
+  .screen-header {
+    padding: 16px 20px 12px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .screen-header h1 { font-size: 14px; font-weight: 700; color: var(--textPrimary); letter-spacing: 0.8px; text-transform: uppercase; }
+
+  .day-selector {
+    display: flex; gap: 8px; padding: 0 20px 12px; overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .day-chip {
+    flex-shrink: 0; padding: 8px 14px; border-radius: 20px;
+    font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.15s;
+    background: var(--surface); border: 1.5px solid var(--border); color: var(--textSecondary);
+  }
+  .day-chip.active { background: var(--navBg); border-color: transparent; color: var(--primary); }
+
+  .filter-chips {
+    display: flex; gap: 6px; padding: 0 20px 14px; overflow-x: auto; scrollbar-width: none;
+  }
+  .filter-chip {
+    flex-shrink: 0; padding: 5px 12px; border-radius: 20px; font-size: 11px;
+    font-weight: 600; cursor: pointer; transition: all 0.15s;
+    background: var(--surface); border: 1.5px solid var(--border); color: var(--textMuted);
+  }
+  .filter-chip.on { background: var(--primary); border-color: transparent; color: var(--textPrimary); }
+
+  .timeline-list { padding: 0 20px; }
+  .timeline-item {
+    display: flex; gap: 12px; margin-bottom: 4px;
+    position: relative; padding-bottom: 4px;
+  }
+  .tl-time-col { width: 46px; text-align: right; flex-shrink: 0; }
+  .tl-time { font-size: 11px; font-weight: 600; color: var(--textMuted); padding-top: 14px; }
+  .tl-line-col { display: flex; flex-direction: column; align-items: center; width: 28px; flex-shrink: 0; }
+  .tl-dot { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; margin-top: 8px; }
+  .tl-line { width: 2px; flex: 1; background: var(--border); margin-top: 2px; min-height: 16px; }
+  .tl-card {
+    flex: 1; background: var(--surface); border-radius: 14px;
+    border: 1.5px solid var(--border); padding: 10px 12px; margin-bottom: 6px;
+  }
+  .tl-card-title { font-size: 13px; font-weight: 600; color: var(--textPrimary); }
+  .tl-card-sub { font-size: 11px; color: var(--textMuted); margin-top: 2px; }
+  .tl-card-duration {
+    display: inline-block; margin-top: 4px; padding: 2px 8px;
+    background: var(--bg); border-radius: 8px; font-size: 10px;
+    font-weight: 600; color: var(--textSecondary);
+  }
+
+  /* ===================== INSIGHTS SCREEN ===================== */
+  .tab-bar {
+    display: flex; border-bottom: 1.5px solid var(--border);
+    padding: 0 20px; margin-bottom: 16px;
+  }
+  .tab {
+    flex: 1; padding: 10px 0; text-align: center; cursor: pointer;
+    font-size: 11px; font-weight: 700; color: var(--textMuted);
+    letter-spacing: 0.8px; text-transform: uppercase;
+    border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.15s;
+  }
+  .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+  .tab-content { display: none; padding: 0 20px; }
+  .tab-content.active { display: block; }
+
+  .insight-card {
+    background: var(--surface); border-radius: 20px; border: 1.5px solid var(--border);
+    padding: 16px; margin-bottom: 12px;
+  }
+  .insight-card-title { font-size: 12px; font-weight: 700; color: var(--textMuted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px; }
+
+  .chart-bars { display: flex; align-items: flex-end; gap: 8px; height: 80px; }
+  .chart-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .chart-bar-outer { width: 100%; background: var(--bg); border-radius: 6px; flex: 1; display: flex; flex-direction: column; justify-content: flex-end; }
+  .chart-bar-inner { background: var(--primary); border-radius: 6px; transition: height 0.5s ease; }
+  .chart-bar-label { font-size: 10px; color: var(--textMuted); font-weight: 600; }
+
+  .pattern-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--bg); }
+  .pattern-row:last-child { border-bottom: none; }
+  .pattern-icon { font-size: 22px; }
+  .pattern-info { flex: 1; }
+  .pattern-name { font-size: 13px; font-weight: 600; color: var(--textPrimary); }
+  .pattern-desc { font-size: 12px; color: var(--textMuted); margin-top: 2px; }
+  .pattern-badge { background: var(--bg); border-radius: 10px; padding: 4px 10px; font-size: 11px; font-weight: 600; color: var(--textSecondary); }
+
+  .weekly-ai-card {
+    background: var(--navBg); border-radius: 20px; padding: 20px; margin-bottom: 16px;
+  }
+  .weekly-ai-title { font-size: 11px; font-weight: 700; color: var(--textMutedDark); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px; }
+  .weekly-ai-text { font-size: 13px; color: var(--textOnDark); line-height: 1.7; }
+  .weekly-ai-btn {
+    width: 100%; padding: 14px; background: var(--primary); color: var(--textPrimary);
+    border: none; border-radius: 14px; font-size: 14px; font-weight: 700;
+    cursor: pointer; margin-top: 12px; transition: transform 0.15s;
+  }
+  .weekly-ai-btn:hover { transform: scale(0.98); }
+
+  /* ===================== SETTINGS SCREEN ===================== */
+  .settings-section { padding: 0 20px 16px; }
+  .settings-label { font-size: 11px; font-weight: 700; color: var(--textMuted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px; }
+  .settings-card {
+    background: var(--surface); border-radius: 20px; border: 1.5px solid var(--border); overflow: hidden;
+  }
+  .settings-row {
+    display: flex; align-items: center; padding: 14px 16px; gap: 12px;
+    border-bottom: 1px solid var(--bg); cursor: pointer; transition: background 0.15s;
+  }
+  .settings-row:last-child { border-bottom: none; }
+  .settings-row:hover { background: var(--bg); }
+  .settings-row-icon { font-size: 20px; width: 32px; text-align: center; }
+  .settings-row-info { flex: 1; }
+  .settings-row-title { font-size: 14px; font-weight: 600; color: var(--textPrimary); }
+  .settings-row-sub { font-size: 12px; color: var(--textMuted); margin-top: 2px; }
+  .settings-row-right { font-size: 18px; color: var(--textMuted); }
+  .settings-toggle {
+    width: 44px; height: 26px; background: var(--border); border-radius: 13px;
+    position: relative; cursor: pointer; transition: background 0.25s;
+  }
+  .settings-toggle.on { background: var(--primary); }
+  .settings-toggle::after {
+    content: ''; position: absolute; top: 3px; left: 3px;
+    width: 20px; height: 20px; background: white; border-radius: 50%;
+    transition: transform 0.25s; box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+  .settings-toggle.on::after { transform: translateX(18px); }
+
+  .api-input-wrap { padding: 0 20px 16px; }
+  .api-input {
+    width: 100%; padding: 14px 16px; border-radius: 14px;
+    border: 1.5px solid var(--border); background: var(--surface);
+    font-size: 13px; color: var(--textPrimary); font-family: 'Inter', sans-serif;
+    outline: none; transition: border-color 0.15s;
+  }
+  .api-input:focus { border-color: var(--primary); }
+  .api-save-btn {
+    width: 100%; padding: 13px; background: var(--primary); color: var(--textPrimary);
+    border: none; border-radius: 14px; font-size: 14px; font-weight: 700;
+    cursor: pointer; margin-top: 8px; transition: transform 0.15s;
+  }
+
+  /* ===================== BOTTOM NAV ===================== */
+  .bottom-nav {
+    position: fixed; bottom: 0;
+    width: 390px;
+    background: var(--navBg); border-radius: 24px 24px 0 0;
+    display: flex; padding: 12px 20px 20px;
+    gap: 4px; z-index: 100;
+  }
+  .nav-item {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    gap: 4px; cursor: pointer; padding: 8px 4px; border-radius: 14px;
+    transition: background 0.15s; -webkit-tap-highlight-color: transparent;
+  }
+  .nav-item:hover { background: rgba(255,255,255,0.06); }
+  .nav-icon { font-size: 20px; line-height: 1; }
+  .nav-label { font-size: 10px; font-weight: 600; color: var(--textMutedDark); letter-spacing: 0.3px; }
+  .nav-item.active .nav-label { color: var(--primary); }
+  .nav-pip { width: 4px; height: 4px; border-radius: 2px; background: transparent; transition: background 0.15s; }
+  .nav-item.active .nav-pip { background: var(--primary); }
+
+  /* Typing animation */
+  .typing { display: inline-flex; gap: 4px; align-items: center; padding: 8px 0; }
+  .typing span { width: 6px; height: 6px; background: var(--secondary); border-radius: 50%; animation: typing 1.2s infinite; }
+  .typing span:nth-child(2) { animation-delay: 0.2s; }
+  .typing span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes typing { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-6px)} }
+
+  /* Scrollable inner content */
+  .scroll-content { overflow-y: auto; flex: 1; scrollbar-width: none; }
+  .scroll-content::-webkit-scrollbar { display: none; }
+
+  /* Mobile full screen */
+  @media (max-width: 390px) {
+    .phone { width: 100%; }
+    .bottom-nav { width: 100%; border-radius: 0; }
+  }
+</style>
+</head>
+<body>
+<div class="phone">
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <span>9:41</span>
+    <div class="status-right">
+      <span>●●●●</span>
+      <span>WiFi</span>
+      <span>🔋</span>
+    </div>
+  </div>
+
+  <!-- ===================== HOME SCREEN ===================== -->
+  <div class="screen active" id="screen-home">
+    <div class="scroll-content">
+      <div class="home-header">
+        <div class="home-header-left">
+          <h2>LIFELENS</h2>
+          <div class="date" id="today-date"></div>
+        </div>
+        <div class="live-badge"><div class="live-dot"></div>LIVE</div>
+      </div>
+
+      <!-- Score Cards -->
+      <div class="scores-row">
+        <div class="score-card">
+          <div class="score-label">PRODUCTIVITY</div>
+          <div class="score-number high" id="prod-score">74</div>
+          <div class="score-sub">Above avg ↑</div>
+        </div>
+        <div class="score-card">
+          <div class="score-label">WELLBEING</div>
+          <div class="score-number mid" id="well-score">61</div>
+          <div class="score-sub">Needs focus</div>
+        </div>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="stats-grid">
+        <div class="stat-card accent">
+          <div class="stat-icon">👣</div>
+          <div class="stat-value" style="color: var(--primary);">8,247</div>
+          <div class="stat-label">Steps Today</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">📱</div>
+          <div class="stat-value">4h 32m</div>
+          <div class="stat-label">Screen Time</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🤚</div>
+          <div class="stat-value">37</div>
+          <div class="stat-label">Phone Pickups</div>
+        </div>
+        <div class="stat-card accent">
+          <div class="stat-icon">📍</div>
+          <div class="stat-value" style="color: var(--secondary);">3</div>
+          <div class="stat-label">Places Visited</div>
+        </div>
+      </div>
+
+      <!-- AI Summary -->
+      <div class="ai-card">
+        <div class="ai-card-header">
+          <div class="ai-label">✦ AI SUMMARY</div>
+          <div class="ai-badge">CLAUDE</div>
+        </div>
+        <div class="ai-content">
+          <div class="ai-narrative" id="ai-text">
+            Your morning was focused — 2.3 hours of deep work before 10am with no distractions.
+            You spent 47 minutes on Instagram after lunch (your usual afternoon dip).
+            The afternoon walk at 4pm brought a nice 2,200-step boost.
+            Overall a solid day, slightly above your weekly average.
+          </div>
+          <button class="ai-generate-btn" onclick="regenerateSummary()">✦ Regenerate with Claude AI</button>
+        </div>
+      </div>
+
+      <!-- Top Apps -->
+      <div class="section-title">TOP APPS TODAY</div>
+
+      <div class="app-bar-row">
+        <div class="app-bar-icon">💼</div>
+        <div class="app-bar-info">
+          <div class="app-bar-name">VS Code / Work</div>
+          <div class="app-bar-bg"><div class="app-bar-fill" style="width:72%;background:var(--productive);"></div></div>
+        </div>
+        <div class="app-bar-time">2h 18m</div>
+      </div>
+      <div class="app-bar-row">
+        <div class="app-bar-icon">📸</div>
+        <div class="app-bar-info">
+          <div class="app-bar-name">Instagram</div>
+          <div class="app-bar-bg"><div class="app-bar-fill" style="width:52%;background:var(--social);"></div></div>
+        </div>
+        <div class="app-bar-time">47m</div>
+      </div>
+      <div class="app-bar-row">
+        <div class="app-bar-icon">💬</div>
+        <div class="app-bar-info">
+          <div class="app-bar-name">WhatsApp</div>
+          <div class="app-bar-bg"><div class="app-bar-fill" style="width:38%;background:var(--messaging);"></div></div>
+        </div>
+        <div class="app-bar-time">32m</div>
+      </div>
+      <div class="app-bar-row">
+        <div class="app-bar-icon">▶️</div>
+        <div class="app-bar-info">
+          <div class="app-bar-name">YouTube</div>
+          <div class="app-bar-bg"><div class="app-bar-fill" style="width:28%;background:var(--entertainment);"></div></div>
+        </div>
+        <div class="app-bar-time">21m</div>
+      </div>
+      <div style="height:16px;"></div>
+    </div>
+  </div>
+
+  <!-- ===================== TIMELINE SCREEN ===================== -->
+  <div class="screen" id="screen-timeline">
+    <div class="screen-header">
+      <h1>TIMELINE</h1>
+      <span style="font-size:11px;color:var(--textMuted);font-weight:600;">47 events</span>
+    </div>
+    <div class="day-selector">
+      <div class="day-chip">Mon 4</div>
+      <div class="day-chip">Tue 5</div>
+      <div class="day-chip">Wed 6</div>
+      <div class="day-chip">Thu 7</div>
+      <div class="day-chip">Fri 8</div>
+      <div class="day-chip">Sat 9</div>
+      <div class="day-chip active" id="today-chip">Today</div>
+    </div>
+    <div class="filter-chips">
+      <div class="filter-chip on">All</div>
+      <div class="filter-chip">📱 Apps</div>
+      <div class="filter-chip">📍 Location</div>
+      <div class="filter-chip">🏃 Activity</div>
+      <div class="filter-chip">🖥 Screen</div>
+    </div>
+    <div class="scroll-content">
+      <div class="timeline-list" id="timeline-list">
+        <!-- Dynamically filled -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== INSIGHTS SCREEN ===================== -->
+  <div class="screen" id="screen-insights">
+    <div class="screen-header">
+      <h1>INSIGHTS</h1>
+    </div>
+    <div class="tab-bar">
+      <div class="tab active" onclick="switchTab(this,'trends')">TRENDS</div>
+      <div class="tab" onclick="switchTab(this,'patterns')">PATTERNS</div>
+      <div class="tab" onclick="switchTab(this,'weekly')">WEEKLY AI</div>
+    </div>
+    <div class="scroll-content">
+      <!-- Trends Tab -->
+      <div class="tab-content active" id="tab-trends">
+        <div class="insight-card">
+          <div class="insight-card-title">Screen Time — Last 7 Days</div>
+          <div class="chart-bars">
+            <div class="chart-bar-wrap">
+              <div class="chart-bar-outer"><div class="chart-bar-inner" style="height:55%;"></div></div>
+              <div class="chart-bar-label">M</div>
+            </div>
+            <div class="chart-bar-wrap">
+              <div class="chart-bar-outer"><div class="chart-bar-inner" style="height:80%;"></div></div>
+              <div class="chart-bar-label">T</div>
+            </div>
+            <div class="chart-bar-wrap">
+              <div class="chart-bar-outer"><div class="chart-bar-inner" style="height:45%;"></div></div>
+              <div class="chart-bar-label">W</div>
+            </div>
+            <div class="chart-bar-wrap">
+              <div class="chart-bar-outer"><div class="chart-bar-inner" style="height:90%;background:var(--tertiary);"></div></div>
+              <div class="chart-bar-label">T</div>
+            </div>
+            <div class="chart-bar-wrap">
+              <div class="chart-bar-outer"><div class="chart-bar-inner" style="height:60%;"></div></div>
+              <div class="chart-bar-label">F</div>
+            </div>
+            <div class="chart-bar-wrap">
+              <div class="chart-bar-outer"><div class="chart-bar-inner" style="height:100%;background:var(--tertiary);"></div></div>
+              <div class="chart-bar-label">S</div>
+            </div>
+            <div class="chart-bar-wrap">
+              <div class="chart-bar-outer"><div class="chart-bar-inner" style="height:70%;"></div></div>
+              <div class="chart-bar-label">S</div>
+            </div>
+          </div>
+          <div style="margin-top:10px;font-size:12px;color:var(--textMuted);">Avg: 4h 12m · Peak: Thu (6h 48m)</div>
+        </div>
+
+        <div class="insight-card">
+          <div class="insight-card-title">Steps — Last 7 Days</div>
+          <div class="chart-bars">
+            <div class="chart-bar-wrap">
+              <div class="chart-bar-outer"><div class="chart-bar-inner" style="height:40%;background:var(--secondary);"></div></div>
+              <div class="chart-bar-label">M</div>
+            </div>
+            <div class="chart-bar-wrap">
+              <div class="chart-bar-outer"><div class="chart-bar-inner" style="height:65%;background:var(--secondary);"></div></div>
+              <div class="chart-bar-label">T</div>
+            </div>
+            <div class="chart-bar-wrap">
+              <div class="chart-bar-outer"><div class="chart-bar-inner" style="height:85%;background:var(--scoreHigh);"></div></div>
+              <div class="chart-bar-label">W</div>
+            </div>
+            <div class="chart-bar-wrap">
+              <div class="chart-bar-outer"><div class="chart-bar-inner" style="height:30%;background:var(--secondary);"></div></div>
+              <div class="chart-bar-label">T</div>
+            </div>
+            <div class="chart-bar-wrap">
+              <div class="chart-bar-outer"><div class="chart-bar-inner" style="height:70%;background:var(--secondary);"></div></div>
+              <div class="chart-bar-label">F</div>
+            </div>
+            <div class="chart-bar-wrap">
+              <div class="chart-bar-outer"><div class="chart-bar-inner" style="height:50%;background:var(--secondary);"></div></div>
+              <div class="chart-bar-label">S</div>
+            </div>
+            <div class="chart-bar-wrap">
+              <div class="chart-bar-outer"><div class="chart-bar-inner" style="height:82%;background:var(--scoreHigh);"></div></div>
+              <div class="chart-bar-label">S</div>
+            </div>
+          </div>
+          <div style="margin-top:10px;font-size:12px;color:var(--textMuted);">Avg: 6,840 steps · Best: Wed (10,200)</div>
+        </div>
+      </div>
+
+      <!-- Patterns Tab -->
+      <div class="tab-content" id="tab-patterns">
+        <div class="insight-card">
+          <div class="insight-card-title">Detected Patterns</div>
+          <div class="pattern-row">
+            <div class="pattern-icon">🌅</div>
+            <div class="pattern-info">
+              <div class="pattern-name">Early Morning Focus</div>
+              <div class="pattern-desc">Most productive 7–9am on weekdays</div>
+            </div>
+            <div class="pattern-badge">5/7 days</div>
+          </div>
+          <div class="pattern-row">
+            <div class="pattern-icon">📉</div>
+            <div class="pattern-info">
+              <div class="pattern-name">Post-Lunch Scroll</div>
+              <div class="pattern-desc">Instagram/YouTube spike 1–2pm daily</div>
+            </div>
+            <div class="pattern-badge">Every day</div>
+          </div>
+          <div class="pattern-row">
+            <div class="pattern-icon">🚶</div>
+            <div class="pattern-info">
+              <div class="pattern-name">Evening Walk</div>
+              <div class="pattern-desc">Movement burst near 4–5pm</div>
+            </div>
+            <div class="pattern-badge">4/7 days</div>
+          </div>
+          <div class="pattern-row">
+            <div class="pattern-icon">🌙</div>
+            <div class="pattern-info">
+              <div class="pattern-name">Late Night Screen</div>
+              <div class="pattern-desc">Phone use after 11pm 3x this week</div>
+            </div>
+            <div class="pattern-badge" style="color:var(--tertiary);">⚠ 3 nights</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Weekly AI Tab -->
+      <div class="tab-content" id="tab-weekly">
+        <div class="weekly-ai-card">
+          <div class="weekly-ai-title">✦ CLAUDE WEEKLY REPORT</div>
+          <div class="weekly-ai-text" id="weekly-text">
+            This week you averaged 4h 12m of screen time daily — 18% above your personal baseline.
+            Your most productive day was Wednesday with 3.8 hours of focused work.
+            Thursday was your worst day for digital wellbeing: 6h 48m screen time, mostly passive content.
+            <br><br>
+            <strong style="color:var(--primary);">Recommendation:</strong> Try a hard stop at 10pm for screens.
+            Your sleep quality correlates strongly with your morning productivity scores.
+          </div>
+          <button class="weekly-ai-btn" onclick="regenerateWeekly()">✦ Generate New Report</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== SETTINGS SCREEN ===================== -->
+  <div class="screen" id="screen-settings">
+    <div class="screen-header"><h1>SETTINGS</h1></div>
+    <div class="scroll-content">
+      <!-- API Key -->
+      <div class="settings-section">
+        <div class="settings-label">CLAUDE AI</div>
+        <div class="api-input-wrap" style="padding:0 0 8px;">
+          <input class="api-input" type="password" placeholder="sk-ant-... (your Claude API key)" id="api-key-input">
+          <button class="api-save-btn" onclick="saveKey()">Save API Key</button>
+        </div>
+      </div>
+
+      <!-- Tracking -->
+      <div class="settings-section">
+        <div class="settings-label">TRACKING</div>
+        <div class="settings-card">
+          <div class="settings-row" onclick="toggleSetting(this)">
+            <div class="settings-row-icon">📱</div>
+            <div class="settings-row-info">
+              <div class="settings-row-title">App Usage Tracking</div>
+              <div class="settings-row-sub">Every 5 minutes via UsageStats API</div>
+            </div>
+            <div class="settings-toggle on"></div>
+          </div>
+          <div class="settings-row" onclick="toggleSetting(this)">
+            <div class="settings-row-icon">📍</div>
+            <div class="settings-row-info">
+              <div class="settings-row-title">Location Tracking</div>
+              <div class="settings-row-sub">Every 10 minutes, background</div>
+            </div>
+            <div class="settings-toggle on"></div>
+          </div>
+          <div class="settings-row" onclick="toggleSetting(this)">
+            <div class="settings-row-icon">👣</div>
+            <div class="settings-row-info">
+              <div class="settings-row-title">Step Counter</div>
+              <div class="settings-row-sub">Pedometer, always active</div>
+            </div>
+            <div class="settings-toggle on"></div>
+          </div>
+          <div class="settings-row" onclick="toggleSetting(this)">
+            <div class="settings-row-icon">🖥</div>
+            <div class="settings-row-info">
+              <div class="settings-row-title">Screen On/Off Events</div>
+              <div class="settings-row-sub">Phone pickup detection</div>
+            </div>
+            <div class="settings-toggle on"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Data -->
+      <div class="settings-section">
+        <div class="settings-label">DATA</div>
+        <div class="settings-card">
+          <div class="settings-row">
+            <div class="settings-row-icon">💾</div>
+            <div class="settings-row-info">
+              <div class="settings-row-title">Storage Used</div>
+              <div class="settings-row-sub">47.2 MB local SQLite database</div>
+            </div>
+            <div class="settings-row-right">→</div>
+          </div>
+          <div class="settings-row" onclick="if(confirm('Delete all data? This cannot be undone.'))alert('Data cleared.')">
+            <div class="settings-row-icon">🗑</div>
+            <div class="settings-row-info">
+              <div class="settings-row-title" style="color:var(--tertiary);">Clear All Data</div>
+              <div class="settings-row-sub">Permanently delete all tracked events</div>
+            </div>
+            <div class="settings-row-right">→</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Permissions -->
+      <div class="settings-section">
+        <div class="settings-label">PERMISSIONS</div>
+        <div class="settings-card">
+          <div class="settings-row">
+            <div class="settings-row-icon">🔓</div>
+            <div class="settings-row-info">
+              <div class="settings-row-title">Usage Access</div>
+              <div class="settings-row-sub">Android Settings → Special App Access</div>
+            </div>
+            <div style="font-size:11px;font-weight:700;color:var(--scoreHigh);">GRANTED</div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-icon">🛰</div>
+            <div class="settings-row-info">
+              <div class="settings-row-title">Background Location</div>
+              <div class="settings-row-sub">Allow all the time</div>
+            </div>
+            <div style="font-size:11px;font-weight:700;color:var(--scoreHigh);">GRANTED</div>
+          </div>
+        </div>
+      </div>
+      <div style="height:16px;"></div>
+    </div>
+  </div>
+
+  <!-- Bottom Nav -->
+  <div class="bottom-nav">
+    <div class="nav-item active" onclick="showScreen('home',this)">
+      <div class="nav-icon">⬡</div>
+      <div class="nav-label">HOME</div>
+      <div class="nav-pip"></div>
+    </div>
+    <div class="nav-item" onclick="showScreen('timeline',this)">
+      <div class="nav-icon">⏱</div>
+      <div class="nav-label">TIMELINE</div>
+      <div class="nav-pip"></div>
+    </div>
+    <div class="nav-item" onclick="showScreen('insights',this)">
+      <div class="nav-icon">✦</div>
+      <div class="nav-label">INSIGHTS</div>
+      <div class="nav-pip"></div>
+    </div>
+    <div class="nav-item" onclick="showScreen('settings',this)">
+      <div class="nav-icon">⚙</div>
+      <div class="nav-label">SETTINGS</div>
+      <div class="nav-pip"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Today's date
+const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const now = new Date();
+document.getElementById('today-date').textContent =
+  days[now.getDay()] + ', ' + months[now.getMonth()] + ' ' + now.getDate();
+document.getElementById('today-chip').textContent =
+  'Today ' + now.getDate();
+
+// Screen navigation
+function showScreen(name, navEl) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  navEl.classList.add('active');
+}
+
+// Tab switching
+function switchTab(tabEl, name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  tabEl.classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+// Toggle settings
+function toggleSetting(row) {
+  const toggle = row.querySelector('.settings-toggle');
+  toggle.classList.toggle('on');
+}
+
+// Timeline data
+const timelineEvents = [
+  { time: '07:12', icon: '🌅', bg: '#FFF9C4', title: 'Screen On', sub: 'Morning start', dur: null },
+  { time: '07:13', icon: '💬', bg: '#E3F2FD', title: 'WhatsApp', sub: 'com.whatsapp', dur: '18m' },
+  { time: '07:31', icon: '📍', bg: '#E8F5E9', title: 'Home', sub: 'Mumbai, MH', dur: null },
+  { time: '08:05', icon: '💼', bg: '#F3E5F5', title: 'VS Code', sub: 'com.microsoft.vscode', dur: '1h 22m' },
+  { time: '09:27', icon: '👣', bg: '#FFF3E0', title: 'Walking', sub: '320 steps', dur: '4m' },
+  { time: '09:31', icon: '💼', bg: '#F3E5F5', title: 'VS Code', sub: 'com.microsoft.vscode', dur: '56m' },
+  { time: '10:28', icon: '📸', bg: '#FCE4EC', title: 'Instagram', sub: 'com.instagram.android', dur: '11m' },
+  { time: '10:39', icon: '📍', bg: '#E8F5E9', title: 'Coffee Shop', sub: 'Starbucks, Bandra', dur: null },
+  { time: '12:14', icon: '🍽', bg: '#FFF9C4', title: 'Lunch Break', sub: 'Activity paused', dur: null },
+  { time: '13:02', icon: '📸', bg: '#FCE4EC', title: 'Instagram', sub: 'com.instagram.android', dur: '34m' },
+  { time: '13:36', icon: '▶️', bg: '#FFF3E0', title: 'YouTube', sub: 'com.google.android.youtube', dur: '21m' },
+  { time: '14:00', icon: '💼', bg: '#F3E5F5', title: 'VS Code', sub: 'com.microsoft.vscode', dur: '2h 10m' },
+  { time: '16:11', icon: '👣', bg: '#FFF3E0', title: 'Walk Detected', sub: '2,240 steps', dur: '22m' },
+  { time: '16:33', icon: '📍', bg: '#E8F5E9', title: 'Park', sub: 'Joggers Park, Bandra', dur: null },
+  { time: '18:44', icon: '📍', bg: '#E8F5E9', title: 'Home', sub: 'Mumbai, MH', dur: null },
+  { time: '21:15', icon: '📺', bg: '#EDE7F6', title: 'Netflix', sub: 'com.netflix.mediaclient', dur: '48m' },
+  { time: '22:03', icon: '🌙', bg: '#E8EAF6', title: 'Screen Off', sub: 'Bedtime', dur: null },
+];
+
+const tlList = document.getElementById('timeline-list');
+timelineEvents.forEach((ev, i) => {
+  const isLast = i === timelineEvents.length - 1;
+  tlList.innerHTML += `
+    <div class="timeline-item">
+      <div class="tl-time-col"><div class="tl-time">${ev.time}</div></div>
+      <div class="tl-line-col">
+        <div class="tl-dot" style="background:${ev.bg}">${ev.icon}</div>
+        ${!isLast ? '<div class="tl-line"></div>' : ''}
+      </div>
+      <div style="flex:1;padding-top:8px;">
+        <div class="tl-card">
+          <div class="tl-card-title">${ev.title}</div>
+          <div class="tl-card-sub">${ev.sub}</div>
+          ${ev.dur ? `<div class="tl-card-duration">${ev.dur}</div>` : ''}
+        </div>
+      </div>
+    </div>`;
+});
+
+// AI Regenerate
+const summaries = [
+  "Your morning was focused — 2.3 hours of deep work before 10am with no distractions. You spent 47 minutes on Instagram after lunch (your usual afternoon dip). The afternoon walk at 4pm brought a nice 2,200-step boost. Overall a solid day, slightly above your weekly average.",
+  "Strong start to the day: 2h+ in VS Code with zero social media interruptions until 10:30am. Post-lunch scroll habit kicked in again — 34 minutes on Instagram. You walked 2,240 steps in the evening which is great. Screen time of 4h 32m is within your goal.",
+  "Productive morning shielded from distractions. The daily 1pm Instagram habit appeared again — consider setting an app timer. Your evening walk is becoming consistent (4th day this week). Late-night Netflix until 22:00 may affect tomorrow's morning focus.",
+];
+let summaryIdx = 0;
+
+function regenerateSummary() {
+  const btn = document.querySelector('.ai-generate-btn');
+  const text = document.getElementById('ai-text');
+  btn.textContent = '✦ Analyzing...';
+  btn.disabled = true;
+  text.innerHTML = '<div class="typing"><span></span><span></span><span></span></div>';
+  setTimeout(() => {
+    summaryIdx = (summaryIdx + 1) % summaries.length;
+    text.textContent = summaries[summaryIdx];
+    btn.textContent = '✦ Regenerate with Claude AI';
+    btn.disabled = false;
+  }, 1800);
+}
+
+const weeklyReports = [
+  "This week you averaged 4h 12m of screen time daily — 18% above your personal baseline. Your most productive day was Wednesday with 3.8 hours of focused work. Thursday was your worst day for digital wellbeing: 6h 48m screen time, mostly passive content.\n\n<strong style='color:var(--primary)'>Recommendation:</strong> Try a hard stop at 10pm for screens. Your sleep quality correlates strongly with your morning productivity scores.",
+  "Week 2 summary: You improved your morning routine — 5 out of 7 days you started focused work before 8:30am. Steps are up 12% from last week (avg 7,100/day). Social media use dropped slightly but is still your #1 distraction category at 52 min/day.",
+];
+let weeklyIdx = 0;
+
+function regenerateWeekly() {
+  const btn = document.querySelector('.weekly-ai-btn');
+  const text = document.getElementById('weekly-text');
+  btn.textContent = '✦ Generating...';
+  btn.disabled = true;
+  text.innerHTML = '<div class="typing" style="justify-content:center"><span></span><span></span><span></span></div>';
+  setTimeout(() => {
+    weeklyIdx = (weeklyIdx + 1) % weeklyReports.length;
+    text.innerHTML = weeklyReports[weeklyIdx];
+    btn.textContent = '✦ Generate New Report';
+    btn.disabled = false;
+  }, 2200);
+}
+
+function saveKey() {
+  const val = document.getElementById('api-key-input').value;
+  if (!val) { alert('Please enter your API key'); return; }
+  alert('API key saved! ✓');
+}
+</script>
+</body>
+</html>
