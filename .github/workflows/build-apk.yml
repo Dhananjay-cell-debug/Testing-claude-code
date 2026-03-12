@@ -37,6 +37,32 @@ jobs:
         working-directory: life_lens
         run: flutter pub get
 
+      - name: Patch app_usage namespace
+        run: |
+          APP_USAGE_DIR=$(find ~/.pub-cache -path "*/app_usage-*/android" -type d | head -1)
+          echo "app_usage dir: $APP_USAGE_DIR"
+          if [ -n "$APP_USAGE_DIR" ]; then
+            MANIFEST="$APP_USAGE_DIR/src/main/AndroidManifest.xml"
+            GRADLE="$APP_USAGE_DIR/build.gradle"
+            echo "Manifest: $MANIFEST"
+            echo "Gradle: $GRADLE"
+            if [ -f "$MANIFEST" ]; then
+              PACKAGE=$(grep -oP 'package="\K[^"]+' "$MANIFEST" || grep -o 'package="[^"]*"' "$MANIFEST" | sed 's/package="//;s/"//')
+              echo "Detected package: $PACKAGE"
+            fi
+            if [ -f "$GRADLE" ] && [ -n "$PACKAGE" ]; then
+              if ! grep -q "namespace" "$GRADLE"; then
+                sed -i "s/android {/android {\n        namespace '$PACKAGE'/" "$GRADLE"
+                echo "Patched! New build.gradle:"
+                cat "$GRADLE"
+              else
+                echo "Namespace already present, no patch needed"
+              fi
+            fi
+          else
+            echo "WARNING: app_usage not found in pub-cache"
+          fi
+
       - name: Make gradlew executable
         working-directory: life_lens/android
         run: chmod +x gradlew
