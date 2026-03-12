@@ -6,7 +6,7 @@ class LifeEvent {
   final int durationSeconds;
   final Map<String, dynamic> data;
 
-  const LifeEvent({
+  LifeEvent({
     this.id,
     required this.type,
     required this.timestamp,
@@ -122,7 +122,7 @@ class PeriodStats {
   final int phonePickups;
   final String? dominantActivity;
 
-  const PeriodStats({
+  PeriodStats({
     required this.date,
     required this.totalScreenTimeMinutes,
     required this.totalSteps,

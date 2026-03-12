@@ -80,7 +80,8 @@
             android:isStickyService="true"
             android:enabled="true"
             android:exported="false"
-            android:foregroundServiceType="dataSync" />
+            android:foregroundServiceType="dataSync"
+            tools:replace="android:exported" />
 
         <!-- Auto-start on device reboot -->
         <receiver

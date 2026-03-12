@@ -10,7 +10,7 @@ class DailySummary {
   final Map<String, dynamic> rawStats;
   final DateTime generatedAt;
 
-  const DailySummary({
+  DailySummary({
     this.id,
     required this.date,
     required this.narrative,
@@ -82,7 +82,7 @@ class WeeklyReport {
   final int totalSteps;
   final int totalScreenTimeHours;
 
-  const WeeklyReport({
+  WeeklyReport({
     required this.weekStart,
     required this.dailySummaries,
     required this.weeklyNarrative,
