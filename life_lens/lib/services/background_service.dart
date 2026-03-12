@@ -11,7 +11,7 @@ import 'step_service.dart';
 Future<void> initializeBackgroundService() async {
   final service = FlutterBackgroundService();
 
-  const androidConfig = AndroidConfiguration(
+  final androidConfig = AndroidConfiguration(
     onStart: onServiceStart,
     autoStart: true,
     isForegroundMode: true,
@@ -21,7 +21,7 @@ Future<void> initializeBackgroundService() async {
     foregroundServiceNotificationId: 888,
   );
 
-  const iosConfig = IosConfiguration(
+  final iosConfig = IosConfiguration(
     autoStart: true,
     onForeground: onServiceStart,
     onBackground: onIosBackground,
