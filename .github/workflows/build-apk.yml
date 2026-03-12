@@ -3,7 +3,7 @@ name: Build LifeLens APK
 on:
   push:
     branches: [ main, master, "claude/*" ]
-  workflow_dispatch:  # Manual trigger button in GitHub UI
+  workflow_dispatch:
 
 jobs:
   build-apk:
@@ -11,18 +11,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Get the code
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. Setup Java (required for Android builds)
       - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      # 3. Setup Flutter
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -30,49 +27,35 @@ jobs:
           channel: 'stable'
           cache: true
 
-      # 4. Accept Android licenses
+      - name: Flutter doctor
+        run: flutter doctor -v
+
       - name: Accept Android licenses
         run: yes | flutter doctor --android-licenses || true
 
-      # 5. Install dependencies
       - name: Install dependencies
         working-directory: life_lens
         run: flutter pub get
 
-      # 6. Analyze code (non-blocking)
+      - name: Make gradlew executable
+        working-directory: life_lens/android
+        run: chmod +x gradlew
+
       - name: Analyze code
         working-directory: life_lens
         run: flutter analyze --no-fatal-infos || true
 
-      # 7. Build the APK
-      - name: Build release APK
-        working-directory: life_lens
-        run: |
-          flutter build apk --release \
-            --build-name=1.0.0 \
-            --build-number=${{ github.run_number }}
-
-      # 8. Build debug APK too (easier to install, no signing needed)
       - name: Build debug APK
         working-directory: life_lens
-        run: flutter build apk --debug
-
-      # 8. Upload APKs as downloadable artifacts
-      - name: Upload Release APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: LifeLens-release-v1.0.${{ github.run_number }}
-          path: life_lens/build/app/outputs/flutter-apk/app-release.apk
-          retention-days: 30
+        run: flutter build apk --debug --build-name=1.0.${{ github.run_number }} --build-number=${{ github.run_number }}
 
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: LifeLens-debug-v1.0.${{ github.run_number }}
+          name: LifeLens-v1.0.${{ github.run_number }}
           path: life_lens/build/app/outputs/flutter-apk/app-debug.apk
           retention-days: 30
 
-      # 9. Upload to Firebase App Distribution (auto-notify testers)
       - name: Upload to Firebase App Distribution
         if: ${{ secrets.FIREBASE_APP_ID != '' }}
         uses: wzieba/Firebase-Distribution-Github-Action@v1
@@ -83,18 +66,9 @@ jobs:
           file: life_lens/build/app/outputs/flutter-apk/app-debug.apk
           releaseNotes: "Build #${{ github.run_number }} - ${{ github.event.head_commit.message }}"
 
-      # 10. Show download info in the log
-      - name: Build complete!
+      - name: Done!
         run: |
-          echo "========================================"
-          echo " LifeLens APK Build Complete!"
-          echo "========================================"
-          echo ""
-          echo " GitHub Artifacts: Actions tab → This run → Artifacts"
-          echo " Firebase: Check your email for install link!"
-          echo ""
-          echo " Install on Android:"
-          echo " 1. Open install link from email OR download APK"
-          echo " 2. Allow 'Install unknown apps' if prompted"
-          echo " 3. Settings → Apps → Usage Access → LifeLens → ON"
-          echo "========================================"
+          echo "================================"
+          echo " APK Ready!"
+          echo " Download from Artifacts below"
+          echo "================================"
