@@ -37,10 +37,12 @@ jobs:
         working-directory: life_lens
         run: flutter pub get
 
-      - name: Fix missing namespaces in Flutter plugins
+      - name: Fix Flutter plugin compatibility issues
         run: |
           python3 << 'EOF'
           import os, re, glob
+
+          COMPILE_SDK = 34
 
           pub_cache = os.path.expanduser("~/.pub-cache/hosted")
           gradle_files = glob.glob(f"{pub_cache}/**/android/build.gradle", recursive=True)
@@ -49,24 +51,40 @@ jobs:
           for gradle_path in gradle_files:
               with open(gradle_path, 'r') as f:
                   content = f.read()
-              if 'namespace' in content:
-                  continue
-              # Find AndroidManifest.xml to get package name
-              manifest_path = os.path.join(os.path.dirname(gradle_path), 'src', 'main', 'AndroidManifest.xml')
-              if not os.path.exists(manifest_path):
-                  continue
-              with open(manifest_path, 'r') as f:
-                  manifest = f.read()
-              match = re.search(r'package="([^"]+)"', manifest)
-              if not match:
-                  continue
-              package = match.group(1)
-              # Inject namespace into android block
-              new_content = re.sub(r'(android\s*\{)', f'\\1\n    namespace "{package}"', content, count=1)
-              if new_content != content:
+              modified = content
+
+              # Fix 1: add missing namespace
+              if 'namespace' not in modified:
+                  manifest_path = os.path.join(os.path.dirname(gradle_path), 'src', 'main', 'AndroidManifest.xml')
+                  if os.path.exists(manifest_path):
+                      with open(manifest_path, 'r') as f:
+                          manifest = f.read()
+                      m = re.search(r'package="([^"]+)"', manifest)
+                      if m:
+                          package = m.group(1)
+                          modified = re.sub(r'(android\s*\{)', f'\\1\n    namespace "{package}"', modified, count=1)
+
+              # Fix 2: replace null flutter.compileSdkVersion with hardcoded value
+              modified = re.sub(
+                  r'flutter\.compileSdkVersion',
+                  str(COMPILE_SDK),
+                  modified
+              )
+
+              # Fix 3: add compileSdkVersion if completely missing inside android block
+              if re.search(r'android\s*\{', modified) and 'compileSdk' not in modified:
+                  modified = re.sub(
+                      r'(android\s*\{)',
+                      f'\\1\n    compileSdkVersion {COMPILE_SDK}',
+                      modified, count=1
+                  )
+
+              if modified != content:
                   with open(gradle_path, 'w') as f:
-                      f.write(new_content)
-                  print(f"Patched: {gradle_path} -> namespace {package}")
+                      f.write(modified)
+                  print(f"Patched: {os.path.basename(os.path.dirname(os.path.dirname(gradle_path)))}")
+
+          print("Done patching plugins.")
           EOF
 
       - name: Make gradlew executable
