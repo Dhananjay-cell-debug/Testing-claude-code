@@ -37,6 +37,38 @@ jobs:
         working-directory: life_lens
         run: flutter pub get
 
+      - name: Fix missing namespaces in Flutter plugins
+        run: |
+          python3 << 'EOF'
+          import os, re, glob
+
+          pub_cache = os.path.expanduser("~/.pub-cache/hosted")
+          gradle_files = glob.glob(f"{pub_cache}/**/android/build.gradle", recursive=True)
+          print(f"Found {len(gradle_files)} plugin build.gradle files")
+
+          for gradle_path in gradle_files:
+              with open(gradle_path, 'r') as f:
+                  content = f.read()
+              if 'namespace' in content:
+                  continue
+              # Find AndroidManifest.xml to get package name
+              manifest_path = os.path.join(os.path.dirname(gradle_path), 'src', 'main', 'AndroidManifest.xml')
+              if not os.path.exists(manifest_path):
+                  continue
+              with open(manifest_path, 'r') as f:
+                  manifest = f.read()
+              match = re.search(r'package="([^"]+)"', manifest)
+              if not match:
+                  continue
+              package = match.group(1)
+              # Inject namespace into android block
+              new_content = re.sub(r'(android\s*\{)', f'\\1\n    namespace "{package}"', content, count=1)
+              if new_content != content:
+                  with open(gradle_path, 'w') as f:
+                      f.write(new_content)
+                  print(f"Patched: {gradle_path} -> namespace {package}")
+          EOF
+
       - name: Make gradlew executable
         working-directory: life_lens/android
         run: chmod +x gradlew
