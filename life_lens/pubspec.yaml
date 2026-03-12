@@ -14,7 +14,7 @@ dependencies:
   flutter_background_service: ^5.0.5
 
   # App usage stats (which apps you used, when, how long)
-  app_usage: ^3.0.0
+  app_usage: ^6.0.0
 
   # Location tracking
   geolocator: ^13.0.1
