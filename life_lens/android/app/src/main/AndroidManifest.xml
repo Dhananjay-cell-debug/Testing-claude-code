@@ -77,7 +77,6 @@
         <!-- Background tracking service -->
         <service
             android:name="id.flutter.flutter_background_service.BackgroundService"
-            android:isStickyService="true"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="dataSync"
