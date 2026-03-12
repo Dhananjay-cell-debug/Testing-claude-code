@@ -56,15 +56,6 @@ jobs:
           path: life_lens/build/app/outputs/flutter-apk/app-debug.apk
           retention-days: 30
 
-      - name: Upload to Firebase App Distribution
-        if: ${{ secrets.FIREBASE_APP_ID != '' }}
-        uses: wzieba/Firebase-Distribution-Github-Action@v1
-        with:
-          appId: ${{ secrets.FIREBASE_APP_ID }}
-          serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          groups: testers
-          file: life_lens/build/app/outputs/flutter-apk/app-debug.apk
-          releaseNotes: "Build #${{ github.run_number }} - ${{ github.event.head_commit.message }}"
 
       - name: Done!
         run: |
