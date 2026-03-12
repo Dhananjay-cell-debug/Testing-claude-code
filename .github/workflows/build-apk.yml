@@ -42,7 +42,15 @@ jobs:
           python3 << 'EOF'
           import os, re, glob
 
-          COMPILE_SDK = 34
+          # Replace all flutter.xxx Gradle properties with hardcoded values
+          FLUTTER_PROPS = {
+              'flutter.compileSdkVersion': '34',
+              'flutter.minSdkVersion':     '21',
+              'flutter.targetSdkVersion':  '34',
+              'flutter.versionCode':       '1',
+              'flutter.versionName':       '"1.0"',
+              'flutter.ndkVersion':        '"23.1.7779620"',
+          }
 
           pub_cache = os.path.expanduser("~/.pub-cache/hosted")
           gradle_files = glob.glob(f"{pub_cache}/**/android/build.gradle", recursive=True)
@@ -53,7 +61,11 @@ jobs:
                   content = f.read()
               modified = content
 
-              # Fix 1: add missing namespace
+              # Fix 1: replace ALL flutter.xxx property references
+              for prop, value in FLUTTER_PROPS.items():
+                  modified = modified.replace(prop, value)
+
+              # Fix 2: add missing namespace
               if 'namespace' not in modified:
                   manifest_path = os.path.join(os.path.dirname(gradle_path), 'src', 'main', 'AndroidManifest.xml')
                   if os.path.exists(manifest_path):
@@ -64,18 +76,11 @@ jobs:
                           package = m.group(1)
                           modified = re.sub(r'(android\s*\{)', f'\\1\n    namespace "{package}"', modified, count=1)
 
-              # Fix 2: replace null flutter.compileSdkVersion with hardcoded value
-              modified = re.sub(
-                  r'flutter\.compileSdkVersion',
-                  str(COMPILE_SDK),
-                  modified
-              )
-
-              # Fix 3: add compileSdkVersion if completely missing inside android block
+              # Fix 3: add compileSdkVersion if completely missing
               if re.search(r'android\s*\{', modified) and 'compileSdk' not in modified:
                   modified = re.sub(
                       r'(android\s*\{)',
-                      f'\\1\n    compileSdkVersion {COMPILE_SDK}',
+                      '\\1\n    compileSdkVersion 34',
                       modified, count=1
                   )
 
@@ -105,7 +110,6 @@ jobs:
           name: LifeLens-v1.0.${{ github.run_number }}
           path: life_lens/build/app/outputs/flutter-apk/app-debug.apk
           retention-days: 30
-
 
       - name: Done!
         run: |
