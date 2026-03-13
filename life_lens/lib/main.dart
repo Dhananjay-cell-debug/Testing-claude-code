@@ -1,27 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'services/background_service.dart';
 import 'screens/home_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'utils/constants.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
+final themeNotifier = ValueNotifier<bool>(false); // false = light
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Force dark status bar icons
-  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+  // Load saved theme
+  final prefs = await SharedPreferences.getInstance();
+  final savedDark = prefs.getBool('dark_mode') ?? false;
+  if (savedDark) {
+    AppColors.setDark();
+    themeNotifier.value = true;
+  }
+
+  SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
-    statusBarIconBrightness: Brightness.light,
+    statusBarIconBrightness: savedDark ? Brightness.light : Brightness.dark,
     systemNavigationBarColor: AppColors.surface,
-    systemNavigationBarIconBrightness: Brightness.light,
+    systemNavigationBarIconBrightness: savedDark ? Brightness.light : Brightness.dark,
   ));
 
-  // Setup notification channel first
   await setupNotificationChannel();
-
-  // Initialize background service
   await initializeBackgroundService();
 
   runApp(const LifeLensApp());
@@ -32,36 +38,50 @@ class LifeLensApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'LifeLens',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.dark(
-          primary: AppColors.primary,
-          secondary: AppColors.secondary,
-          surface: AppColors.surface,
-          onPrimary: Colors.white,
-          onSecondary: Colors.white,
-          onSurface: AppColors.textPrimary,
-        ),
-        scaffoldBackgroundColor: AppColors.background,
-        fontFamily: 'Inter',
-        appBarTheme: const AppBarTheme(
-          backgroundColor: AppColors.background,
-          foregroundColor: AppColors.textPrimary,
-          elevation: 0,
-        ),
-        snackBarTheme: const SnackBarThemeData(
-          backgroundColor: AppColors.surface,
-          contentTextStyle: TextStyle(color: AppColors.textPrimary),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(12)),
+    return ValueListenableBuilder<bool>(
+      valueListenable: themeNotifier,
+      builder: (context, isDark, _) {
+        return MaterialApp(
+          title: 'LifeLens',
+          debugShowCheckedModeBanner: false,
+          theme: ThemeData(
+            useMaterial3: true,
+            colorScheme: isDark
+                ? ColorScheme.dark(
+                    primary: AppColors.primary,
+                    secondary: AppColors.secondary,
+                    surface: AppColors.surface,
+                    onPrimary: Colors.black,
+                    onSecondary: Colors.black,
+                    onSurface: AppColors.textPrimary,
+                  )
+                : ColorScheme.light(
+                    primary: AppColors.primary,
+                    secondary: AppColors.secondary,
+                    surface: AppColors.surface,
+                    onPrimary: Colors.black,
+                    onSecondary: Colors.black,
+                    onSurface: AppColors.textPrimary,
+                  ),
+            scaffoldBackgroundColor: AppColors.background,
+            fontFamily: 'Inter',
+            appBarTheme: AppBarTheme(
+              backgroundColor: AppColors.background,
+              foregroundColor: AppColors.textPrimary,
+              elevation: 0,
+            ),
+            snackBarTheme: SnackBarThemeData(
+              backgroundColor: AppColors.surface,
+              contentTextStyle: TextStyle(color: AppColors.textPrimary),
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(12)),
+              ),
+              behavior: SnackBarBehavior.floating,
+            ),
           ),
-          behavior: SnackBarBehavior.floating,
-        ),
-      ),
-      home: const _AppEntry(),
+          home: const _AppEntry(),
+        );
+      },
     );
   }
 }
@@ -91,7 +111,7 @@ class _AppEntryState extends State<_AppEntry> {
   @override
   Widget build(BuildContext context) {
     if (_onboardingComplete == null) {
-      return const Scaffold(
+      return Scaffold(
         backgroundColor: AppColors.background,
         body: Center(
           child: CircularProgressIndicator(color: AppColors.primary),
