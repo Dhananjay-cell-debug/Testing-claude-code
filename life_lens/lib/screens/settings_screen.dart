@@ -287,6 +287,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       title: 'ABOUT',
       children: [
         _InfoRow(label: 'App', value: 'LifeLens v1.0.0'),
+        _InfoRow(label: 'Created by', value: 'Dhananjay Chitimalla'),
         _InfoRow(label: 'AI Model', value: 'Claude Sonnet 4.6'),
         _InfoRow(label: 'Data Storage', value: 'Local SQLite'),
         _InfoRow(label: 'Privacy', value: '100% On-device'),
