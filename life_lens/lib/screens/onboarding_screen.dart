@@ -16,7 +16,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final _pageController = PageController();
   int _currentPage = 0;
 
-  final _pages = const [
+  final _pages = [
     _OnboardingPage(
       emoji: '🧠',
       title: 'Your Life, Quantified',

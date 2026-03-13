@@ -92,7 +92,7 @@ class FluxStatCard extends StatelessWidget {
             // Label
             Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
                 color: AppColors.textMuted,

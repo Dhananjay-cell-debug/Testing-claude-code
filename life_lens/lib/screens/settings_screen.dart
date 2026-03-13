@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../database/database_helper.dart';
 import '../utils/constants.dart';
+import '../main.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -22,6 +23,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String _lastLocation = '';
   int _todaySteps = 0;
   int _screenMins = 0;
+  bool _darkMode = false;
 
   @override
   void initState() {
@@ -46,6 +48,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _lastLocation = prefs.getString('last_location') ?? 'Not detected';
       _todaySteps = prefs.getInt('today_steps') ?? 0;
       _screenMins = prefs.getInt('today_screen_minutes') ?? 0;
+      _darkMode = prefs.getBool('dark_mode') ?? false;
     });
   }
 
@@ -59,8 +62,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Settings saved!'),
+        SnackBar(
+          content: const Text('Settings saved!'),
           backgroundColor: AppColors.scoreHigh,
         ),
       );
@@ -72,15 +75,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.surface,
-        title: const Text('Clear All Data', style: TextStyle(color: AppColors.textPrimary)),
-        content: const Text(
+        title: Text('Clear All Data', style: TextStyle(color: AppColors.textPrimary)),
+        content: Text(
           'This will permanently delete all your tracked data and summaries. This cannot be undone.',
           style: TextStyle(color: AppColors.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel', style: TextStyle(color: AppColors.textMuted)),
+            child: Text('Cancel', style: TextStyle(color: AppColors.textMuted)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -109,6 +112,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _buildHeader(),
           _buildStatusSection(),
           _buildApiKeySection(),
+          _buildAppearanceSection(),
           _buildTrackingSection(),
           _buildDataSection(),
           _buildAboutSection(),
@@ -163,7 +167,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         TextField(
           controller: _apiKeyController,
           obscureText: _obscureKey,
-          style: const TextStyle(color: AppColors.textPrimary, fontSize: 13),
+          style: TextStyle(color: AppColors.textPrimary, fontSize: 13),
           decoration: InputDecoration(
             hintText: 'sk-ant-api03-...',
             hintStyle: TextStyle(color: AppColors.textMuted),
@@ -175,7 +179,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.primary),
+              borderSide: BorderSide(color: AppColors.primary),
             ),
             suffixIcon: IconButton(
               icon: Icon(
@@ -204,6 +208,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             child: const Text('Save API Key', style: TextStyle(fontWeight: FontWeight.w700)),
           ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAppearanceSection() {
+    return _Section(
+      title: 'APPEARANCE',
+      children: [
+        _ToggleRow(
+          emoji: '🌙',
+          label: 'Dark Mode',
+          subtitle: 'Switch between light and dark theme',
+          value: _darkMode,
+          onChanged: (v) async {
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setBool('dark_mode', v);
+            if (v) {
+              AppColors.setDark();
+            } else {
+              AppColors.setLight();
+            }
+            // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
+            themeNotifier.value = v;
+            setState(() => _darkMode = v);
+          },
         ),
       ],
     );
@@ -254,7 +284,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             DropdownButton<int>(
               value: _dataRetentionDays,
               dropdownColor: AppColors.surface,
-              style: const TextStyle(color: AppColors.textPrimary),
+              style: TextStyle(color: AppColors.textPrimary),
               items: [7, 14, 30, 60, 90].map((days) {
                 return DropdownMenuItem(value: days, child: Text('$days days'));
               }).toList(),
@@ -287,7 +317,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       title: 'ABOUT',
       children: [
         _InfoRow(label: 'App', value: 'LifeLens v1.0.0'),
-        _InfoRow(label: 'Created by', value: 'Dhananjay Chitimalla'),
+        _InfoRow(label: 'Created by', value: 'Dhananjay Chitmilla'),
         _InfoRow(label: 'AI Model', value: 'Claude Sonnet 4.6'),
         _InfoRow(label: 'Data Storage', value: 'Local SQLite'),
         _InfoRow(label: 'Privacy', value: '100% On-device'),

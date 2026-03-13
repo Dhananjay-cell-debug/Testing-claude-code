@@ -224,11 +224,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           Container(
             width: 44,
             height: 44,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: AppColors.secondary,
               shape: BoxShape.circle,
             ),
-            child: const Center(
+            child: Center(
               child: Text(
                 'LL',
                 style: TextStyle(
@@ -247,7 +247,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               children: [
                 Text(
                   greeting,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
                     color: AppColors.textMuted,
@@ -257,7 +257,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 const SizedBox(height: 1),
                 Text(
                   DateFormat('EEEE, MMM d').format(now),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w800,
                     color: AppColors.textPrimary,
@@ -280,13 +280,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   Container(
                     width: 6,
                     height: 6,
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       color: AppColors.primaryDark,
                       shape: BoxShape.circle,
                     ),
                   ),
                   const SizedBox(width: 5),
-                  const Text(
+                  Text(
                     'LIVE',
                     style: TextStyle(
                       fontSize: 10,
@@ -329,11 +329,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Row(
+              Row(
                 children: [
                   Icon(Icons.phone_android_rounded,
                       size: 18, color: AppColors.textMuted),
-                  SizedBox(width: 6),
+                  const SizedBox(width: 6),
                   Text(
                     'Screen Time',
                     style: TextStyle(
@@ -352,7 +352,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ),
                 child: Text(
                   screenDouble > 6 ? 'High' : screenDouble > 3 ? 'Avg' : '+Low',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w800,
                     color: AppColors.primaryDark,
@@ -367,7 +367,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             children: [
               Text(
                 screenTimeHours,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 56,
                   fontWeight: FontWeight.w900,
                   color: AppColors.textPrimary,
@@ -375,8 +375,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   height: 1,
                 ),
               ),
-              const Padding(
-                padding: EdgeInsets.only(bottom: 8, left: 4),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8, left: 4),
                 child: Text(
                   'hrs today',
                   style: TextStyle(
@@ -493,7 +493,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(label,
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
                     color: AppColors.textSecondary)),
@@ -548,10 +548,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         children: [
           Row(
             children: [
-              const Icon(Icons.grid_view_rounded,
+              Icon(Icons.grid_view_rounded,
                   size: 18, color: AppColors.textMuted),
               const SizedBox(width: 6),
-              const Text(
+              Text(
                 'Top Apps Today',
                 style: TextStyle(
                     fontSize: 14,
@@ -560,7 +560,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ),
               const Spacer(),
               Text('${topApps.length} apps',
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontSize: 12,
                       color: AppColors.textMuted,
                       fontWeight: FontWeight.w500)),
@@ -588,7 +588,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(app.key,
-                          style: const TextStyle(
+                          style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
                               color: AppColors.textPrimary)),
@@ -654,11 +654,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   color: AppColors.primary.withAlpha(40),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.auto_awesome_rounded,
+                child: Icon(Icons.auto_awesome_rounded,
                     size: 18, color: AppColors.primary),
               ),
               const SizedBox(width: 10),
-              const Text(
+              Text(
                 'AI Daily Brief',
                 style: TextStyle(
                     fontSize: 16,
@@ -674,7 +674,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     color: AppColors.primary.withAlpha(40),
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: const Text(
+                  child: Text(
                     'Today',
                     style: TextStyle(
                         fontSize: 12,
@@ -700,7 +700,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             const SizedBox(height: AppSizes.gapM),
             Text(
               _todaySummary!.narrative,
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 13,
                   color: AppColors.textMutedDark,
                   height: 1.5),
@@ -710,11 +710,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             const SizedBox(height: 12),
             GestureDetector(
               onTap: _generateSummary,
-              child: const Row(
+              child: Row(
                 children: [
                   Icon(Icons.refresh_rounded,
                       size: 14, color: AppColors.primary),
-                  SizedBox(width: 4),
+                  const SizedBox(width: 4),
                   Text('Regenerate',
                       style: TextStyle(
                           fontSize: 12,
@@ -724,13 +724,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ),
             ),
           ] else if (_isGeneratingSummary) ...[
-            const Center(
+            Center(
               child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 16),
+                padding: const EdgeInsets.symmetric(vertical: 16),
                 child: Column(
                   children: [
                     CircularProgressIndicator(color: AppColors.primary),
-                    SizedBox(height: 12),
+                    const SizedBox(height: 12),
                     Text('Claude is analyzing your day...',
                         style: TextStyle(
                             color: AppColors.textMutedDark, fontSize: 13)),
@@ -739,7 +739,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ),
             ),
           ] else ...[
-            const Text(
+            Text(
               'Get Claude\'s analysis of your day',
               style: TextStyle(
                   fontSize: 13, color: AppColors.textMutedDark, height: 1.5),
@@ -784,7 +784,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             const SizedBox(width: 8),
             Text(
               value,
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.w900,
                   color: AppColors.textOnDark,
@@ -795,7 +795,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         Padding(
           padding: const EdgeInsets.only(left: 11),
           child: Text(label,
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 12,
                   color: AppColors.textMutedDark,
                   fontWeight: FontWeight.w500)),

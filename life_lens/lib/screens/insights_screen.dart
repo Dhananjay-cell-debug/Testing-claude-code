@@ -424,10 +424,10 @@ class _InsightsScreenState extends State<InsightsScreen> with SingleTickerProvid
                 ),
                 const SizedBox(height: AppSizes.gapM),
                 if (_loadingReport)
-                  const Column(
+                  Column(
                     children: [
                       CircularProgressIndicator(color: AppColors.primary),
-                      SizedBox(height: 12),
+                      const SizedBox(height: 12),
                       Text('Claude is analyzing your week...', style: AppTextStyles.body),
                     ],
                   )
@@ -470,7 +470,7 @@ class _InsightsScreenState extends State<InsightsScreen> with SingleTickerProvid
                   const SizedBox(height: AppSizes.gapM),
                   TextButton.icon(
                     onPressed: _generateWeeklyReport,
-                    icon: const Icon(Icons.refresh, size: 16, color: AppColors.primary),
+                    icon: Icon(Icons.refresh, size: 16, color: AppColors.primary),
                     label: Text('Refresh', style: AppTextStyles.label.copyWith(color: AppColors.primary)),
                   ),
                 ],

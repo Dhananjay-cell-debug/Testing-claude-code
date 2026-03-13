@@ -79,7 +79,7 @@ class TimelineItem extends StatelessWidget {
                         Expanded(
                           child: Text(
                             event.displayTitle,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
                               color: AppColors.textPrimary,

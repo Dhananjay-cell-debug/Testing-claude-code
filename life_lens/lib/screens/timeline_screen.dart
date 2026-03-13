@@ -75,7 +75,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
           _buildFilterChips(),
           Expanded(
             child: _loading
-                ? const Center(
+                ? Center(
                     child: CircularProgressIndicator(color: AppColors.primary),
                   )
                 : _events.isEmpty
