@@ -2,6 +2,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../models/life_event.dart';
 import '../models/daily_summary.dart';
+import '../models/chat_message.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
@@ -21,7 +22,7 @@ class DatabaseHelper {
 
     return openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -76,6 +77,16 @@ class DatabaseHelper {
       )
     ''');
 
+    await db.execute('''
+      CREATE TABLE chat_messages (
+        id TEXT PRIMARY KEY,
+        role TEXT NOT NULL,
+        content TEXT NOT NULL,
+        timestamp INTEGER NOT NULL,
+        is_daily INTEGER DEFAULT 0
+      )
+    ''');
+
     // Indexes for fast queries
     await db.execute('CREATE INDEX idx_events_timestamp ON life_events(timestamp)');
     await db.execute('CREATE INDEX idx_events_type ON life_events(type)');
@@ -86,6 +97,17 @@ class DatabaseHelper {
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       await db.execute('CREATE INDEX IF NOT EXISTS idx_events_timestamp ON life_events(timestamp)');
+    }
+    if (oldVersion < 3) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS chat_messages (
+          id TEXT PRIMARY KEY,
+          role TEXT NOT NULL,
+          content TEXT NOT NULL,
+          timestamp INTEGER NOT NULL,
+          is_daily INTEGER DEFAULT 0
+        )
+      ''');
     }
   }
 
@@ -295,6 +317,33 @@ class DatabaseHelper {
       'locations': locations.length,
       'events_count': events.length,
     };
+  }
+
+  // ── Chat Messages ─────────────────────────────────────────────────────────
+
+  Future<void> saveChatMessage(ChatMessage message) async {
+    final db = await database;
+    await db.insert('chat_messages', message.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<List<ChatMessage>> getTodaysChatMessages() async {
+    final db = await database;
+    final today = DateTime.now();
+    final startOfDay = DateTime(today.year, today.month, today.day).millisecondsSinceEpoch;
+    final endOfDay = DateTime(today.year, today.month, today.day, 23, 59, 59).millisecondsSinceEpoch;
+    final rows = await db.query(
+      'chat_messages',
+      where: 'timestamp >= ? AND timestamp <= ?',
+      whereArgs: [startOfDay, endOfDay],
+      orderBy: 'timestamp ASC',
+    );
+    return rows.map((r) => ChatMessage.fromMap(r)).toList();
+  }
+
+  Future<void> clearOldChatMessages() async {
+    final db = await database;
+    final cutoff = DateTime.now().subtract(const Duration(days: 30)).millisecondsSinceEpoch;
+    await db.delete('chat_messages', where: 'timestamp < ?', whereArgs: [cutoff]);
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────

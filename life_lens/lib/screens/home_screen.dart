@@ -10,6 +10,7 @@ import '../widgets/stat_card.dart';
 import 'timeline_screen.dart';
 import 'insights_screen.dart';
 import 'settings_screen.dart';
+import 'chat_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -105,6 +106,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         children: [
           _buildDashboard(),
           const TimelineScreen(),
+          const CoachScreen(),
           const InsightsScreen(),
           const SettingsScreen(),
         ],
@@ -880,16 +882,22 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 onTap: () => setState(() => _selectedNav = 1),
               ),
               _FluxNavItem(
-                icon: Icons.auto_awesome_rounded,
-                label: 'Insights',
+                icon: Icons.psychology_rounded,
+                label: 'Coach',
                 selected: _selectedNav == 2,
                 onTap: () => setState(() => _selectedNav = 2),
               ),
               _FluxNavItem(
-                icon: Icons.settings_rounded,
-                label: 'Settings',
+                icon: Icons.auto_awesome_rounded,
+                label: 'Insights',
                 selected: _selectedNav == 3,
                 onTap: () => setState(() => _selectedNav = 3),
+              ),
+              _FluxNavItem(
+                icon: Icons.settings_rounded,
+                label: 'Settings',
+                selected: _selectedNav == 4,
+                onTap: () => setState(() => _selectedNav = 4),
               ),
             ],
           ),
