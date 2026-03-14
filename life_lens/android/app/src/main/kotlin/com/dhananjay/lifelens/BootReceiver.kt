@@ -1,4 +1,4 @@
-package com.lifelens.app
+package com.dhananjay.lifelens
 
 import android.content.BroadcastReceiver
 import android.content.Context

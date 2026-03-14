@@ -3,739 +3,380 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>LifeLens</title>
+<title>LifeLens · Live</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  :root {
-    --bg: #F0F0F7;
-    --surface: #FFFFFF;
-    --surfaceVariant: #F8F8FC;
-    --navBg: #12122A;
-    --border: #E8E8F0;
-    --primary: #C5F135;
-    --primaryDark: #9DC200;
-    --secondary: #B4AEFF;
-    --secondaryDark: #6C63FF;
-    --tertiary: #FF6B6B;
-    --scoreHigh: #00C48C;
-    --scoreMid: #FFB020;
-    --scoreLow: #FF5252;
-    --social: #FF6B9D;
-    --productive: #00C48C;
-    --entertainment: #FF9800;
-    --messaging: #64B5F6;
-    --textPrimary: #12122A;
-    --textSecondary: #6B6B8A;
-    --textMuted: #9999B3;
-    --textOnDark: #F0F0F8;
-    --textMutedDark: #7070A0;
+  *{margin:0;padding:0;box-sizing:border-box;}
+  :root{
+    --bg:#F0F0F7;--surface:#FFFFFF;--navBg:#12122A;--border:#E8E8F0;
+    --primary:#C5F135;--primaryDark:#9DC200;--secondary:#B4AEFF;
+    --tertiary:#FF6B6B;--scoreHigh:#00C48C;--scoreMid:#FFB020;--scoreLow:#FF5252;
+    --textPrimary:#12122A;--textSecondary:#6B6B8A;--textMuted:#9999B3;
+    --textOnDark:#F0F0F8;--textMutedDark:#7070A0;
   }
-
-  body {
-    font-family: 'Inter', sans-serif;
-    background: var(--bg);
-    color: var(--textPrimary);
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-  }
-
-  /* Phone frame */
-  .phone {
-    width: 390px;
-    min-height: 100vh;
-    background: var(--bg);
-    position: relative;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-  }
-
-  /* Status bar */
-  .status-bar {
-    background: var(--bg);
-    padding: 12px 20px 0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--textPrimary);
-  }
-  .status-right { display: flex; gap: 6px; align-items: center; }
-
-  /* Screen container */
-  .screen { display: none; flex-direction: column; flex: 1; padding-bottom: 80px; }
-  .screen.active { display: flex; }
-
-  /* ===================== HOME SCREEN ===================== */
-  .home-header {
-    padding: 16px 20px 12px;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-  }
-  .home-header-left h2 {
-    font-size: 12px; font-weight: 600; color: var(--textMuted);
-    letter-spacing: 0.8px; text-transform: uppercase;
-  }
-  .home-header-left .date {
-    font-size: 22px; font-weight: 800; color: var(--textPrimary); letter-spacing: -0.5px;
-  }
-  .live-badge {
-    background: var(--primary); color: var(--textPrimary);
-    font-size: 10px; font-weight: 700; padding: 4px 10px;
-    border-radius: 20px; letter-spacing: 0.5px;
-    display: flex; align-items: center; gap: 5px;
-    animation: pulse-badge 2s infinite;
-  }
-  .live-dot { width: 6px; height: 6px; background: var(--textPrimary); border-radius: 50%; }
-  @keyframes pulse-badge { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
-
-  /* Score cards */
-  .scores-row {
-    display: flex; gap: 12px; padding: 0 20px 16px;
-  }
-  .score-card {
-    flex: 1; background: var(--navBg); border-radius: 20px;
-    padding: 16px; text-align: center; position: relative; overflow: hidden;
-  }
-  .score-card::before {
-    content: ''; position: absolute; top: -20px; right: -20px;
-    width: 80px; height: 80px; border-radius: 50%;
-    background: rgba(197,241,53,0.08);
-  }
-  .score-label { font-size: 10px; font-weight: 600; color: var(--textMutedDark); letter-spacing: 0.8px; text-transform: uppercase; }
-  .score-number { font-size: 42px; font-weight: 900; letter-spacing: -2px; line-height: 1; margin: 4px 0; }
-  .score-number.high { color: var(--scoreHigh); }
-  .score-number.mid { color: var(--scoreMid); }
-  .score-sub { font-size: 11px; color: var(--textMutedDark); font-weight: 500; }
-
-  /* Stats grid */
-  .stats-grid {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
-    padding: 0 20px 16px;
-  }
-  .stat-card {
-    background: var(--surface); border-radius: 20px; padding: 16px;
-    border: 1.5px solid var(--border); position: relative; overflow: hidden;
-  }
-  .stat-card.accent { background: var(--navBg); border-color: transparent; }
-  .stat-icon { font-size: 22px; margin-bottom: 8px; }
-  .stat-value { font-size: 28px; font-weight: 900; color: var(--textPrimary); letter-spacing: -1px; }
-  .stat-card.accent .stat-value { color: var(--textOnDark); }
-  .stat-label { font-size: 11px; color: var(--textMuted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
-  .stat-card.accent .stat-label { color: var(--textMutedDark); }
-
-  /* AI Summary card */
-  .ai-card {
-    margin: 0 20px 16px;
-    background: var(--surface); border-radius: 20px;
-    border: 1.5px solid var(--border); overflow: hidden;
-  }
-  .ai-card-header {
-    padding: 14px 16px 10px;
-    display: flex; justify-content: space-between; align-items: center;
-  }
-  .ai-label { font-size: 11px; font-weight: 700; color: var(--textMuted); letter-spacing: 0.8px; text-transform: uppercase; }
-  .ai-badge {
-    background: var(--primary); color: var(--textPrimary);
-    font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 10px;
-  }
-  .ai-content { padding: 0 16px 16px; }
-  .ai-narrative {
-    font-size: 13px; color: var(--textSecondary); line-height: 1.7;
-    font-weight: 400;
-  }
-  .ai-generate-btn {
-    width: 100%; margin-top: 12px; padding: 12px;
-    background: var(--primary); color: var(--textPrimary);
-    border: none; border-radius: 12px; font-size: 13px; font-weight: 700;
-    cursor: pointer; transition: transform 0.15s;
-  }
-  .ai-generate-btn:hover { transform: scale(0.98); background: var(--primaryDark); }
-
-  /* Top apps */
-  .section-title {
-    padding: 0 20px 10px;
-    font-size: 11px; font-weight: 700; color: var(--textMuted);
-    letter-spacing: 0.8px; text-transform: uppercase;
-  }
-  .app-bar-row {
-    padding: 0 20px; margin-bottom: 6px;
-    display: flex; align-items: center; gap: 10px;
-  }
-  .app-bar-icon { font-size: 18px; width: 32px; text-align: center; }
-  .app-bar-info { flex: 1; }
-  .app-bar-name { font-size: 13px; font-weight: 600; color: var(--textPrimary); }
-  .app-bar-bg { height: 6px; background: var(--border); border-radius: 3px; margin-top: 4px; overflow: hidden; }
-  .app-bar-fill { height: 100%; border-radius: 3px; }
-  .app-bar-time { font-size: 12px; font-weight: 600; color: var(--textSecondary); white-space: nowrap; }
-
-  /* ===================== TIMELINE SCREEN ===================== */
-  .screen-header {
-    padding: 16px 20px 12px;
-    display: flex; justify-content: space-between; align-items: center;
-  }
-  .screen-header h1 { font-size: 14px; font-weight: 700; color: var(--textPrimary); letter-spacing: 0.8px; text-transform: uppercase; }
-
-  .day-selector {
-    display: flex; gap: 8px; padding: 0 20px 12px; overflow-x: auto;
-    scrollbar-width: none;
-  }
-  .day-chip {
-    flex-shrink: 0; padding: 8px 14px; border-radius: 20px;
-    font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.15s;
-    background: var(--surface); border: 1.5px solid var(--border); color: var(--textSecondary);
-  }
-  .day-chip.active { background: var(--navBg); border-color: transparent; color: var(--primary); }
-
-  .filter-chips {
-    display: flex; gap: 6px; padding: 0 20px 14px; overflow-x: auto; scrollbar-width: none;
-  }
-  .filter-chip {
-    flex-shrink: 0; padding: 5px 12px; border-radius: 20px; font-size: 11px;
-    font-weight: 600; cursor: pointer; transition: all 0.15s;
-    background: var(--surface); border: 1.5px solid var(--border); color: var(--textMuted);
-  }
-  .filter-chip.on { background: var(--primary); border-color: transparent; color: var(--textPrimary); }
-
-  .timeline-list { padding: 0 20px; }
-  .timeline-item {
-    display: flex; gap: 12px; margin-bottom: 4px;
-    position: relative; padding-bottom: 4px;
-  }
-  .tl-time-col { width: 46px; text-align: right; flex-shrink: 0; }
-  .tl-time { font-size: 11px; font-weight: 600; color: var(--textMuted); padding-top: 14px; }
-  .tl-line-col { display: flex; flex-direction: column; align-items: center; width: 28px; flex-shrink: 0; }
-  .tl-dot { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; margin-top: 8px; }
-  .tl-line { width: 2px; flex: 1; background: var(--border); margin-top: 2px; min-height: 16px; }
-  .tl-card {
-    flex: 1; background: var(--surface); border-radius: 14px;
-    border: 1.5px solid var(--border); padding: 10px 12px; margin-bottom: 6px;
-  }
-  .tl-card-title { font-size: 13px; font-weight: 600; color: var(--textPrimary); }
-  .tl-card-sub { font-size: 11px; color: var(--textMuted); margin-top: 2px; }
-  .tl-card-duration {
-    display: inline-block; margin-top: 4px; padding: 2px 8px;
-    background: var(--bg); border-radius: 8px; font-size: 10px;
-    font-weight: 600; color: var(--textSecondary);
-  }
-
-  /* ===================== INSIGHTS SCREEN ===================== */
-  .tab-bar {
-    display: flex; border-bottom: 1.5px solid var(--border);
-    padding: 0 20px; margin-bottom: 16px;
-  }
-  .tab {
-    flex: 1; padding: 10px 0; text-align: center; cursor: pointer;
-    font-size: 11px; font-weight: 700; color: var(--textMuted);
-    letter-spacing: 0.8px; text-transform: uppercase;
-    border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.15s;
-  }
-  .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
-
-  .tab-content { display: none; padding: 0 20px; }
-  .tab-content.active { display: block; }
-
-  .insight-card {
-    background: var(--surface); border-radius: 20px; border: 1.5px solid var(--border);
-    padding: 16px; margin-bottom: 12px;
-  }
-  .insight-card-title { font-size: 12px; font-weight: 700; color: var(--textMuted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px; }
-
-  .chart-bars { display: flex; align-items: flex-end; gap: 8px; height: 80px; }
-  .chart-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-  .chart-bar-outer { width: 100%; background: var(--bg); border-radius: 6px; flex: 1; display: flex; flex-direction: column; justify-content: flex-end; }
-  .chart-bar-inner { background: var(--primary); border-radius: 6px; transition: height 0.5s ease; }
-  .chart-bar-label { font-size: 10px; color: var(--textMuted); font-weight: 600; }
-
-  .pattern-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--bg); }
-  .pattern-row:last-child { border-bottom: none; }
-  .pattern-icon { font-size: 22px; }
-  .pattern-info { flex: 1; }
-  .pattern-name { font-size: 13px; font-weight: 600; color: var(--textPrimary); }
-  .pattern-desc { font-size: 12px; color: var(--textMuted); margin-top: 2px; }
-  .pattern-badge { background: var(--bg); border-radius: 10px; padding: 4px 10px; font-size: 11px; font-weight: 600; color: var(--textSecondary); }
-
-  .weekly-ai-card {
-    background: var(--navBg); border-radius: 20px; padding: 20px; margin-bottom: 16px;
-  }
-  .weekly-ai-title { font-size: 11px; font-weight: 700; color: var(--textMutedDark); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px; }
-  .weekly-ai-text { font-size: 13px; color: var(--textOnDark); line-height: 1.7; }
-  .weekly-ai-btn {
-    width: 100%; padding: 14px; background: var(--primary); color: var(--textPrimary);
-    border: none; border-radius: 14px; font-size: 14px; font-weight: 700;
-    cursor: pointer; margin-top: 12px; transition: transform 0.15s;
-  }
-  .weekly-ai-btn:hover { transform: scale(0.98); }
-
-  /* ===================== SETTINGS SCREEN ===================== */
-  .settings-section { padding: 0 20px 16px; }
-  .settings-label { font-size: 11px; font-weight: 700; color: var(--textMuted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px; }
-  .settings-card {
-    background: var(--surface); border-radius: 20px; border: 1.5px solid var(--border); overflow: hidden;
-  }
-  .settings-row {
-    display: flex; align-items: center; padding: 14px 16px; gap: 12px;
-    border-bottom: 1px solid var(--bg); cursor: pointer; transition: background 0.15s;
-  }
-  .settings-row:last-child { border-bottom: none; }
-  .settings-row:hover { background: var(--bg); }
-  .settings-row-icon { font-size: 20px; width: 32px; text-align: center; }
-  .settings-row-info { flex: 1; }
-  .settings-row-title { font-size: 14px; font-weight: 600; color: var(--textPrimary); }
-  .settings-row-sub { font-size: 12px; color: var(--textMuted); margin-top: 2px; }
-  .settings-row-right { font-size: 18px; color: var(--textMuted); }
-  .settings-toggle {
-    width: 44px; height: 26px; background: var(--border); border-radius: 13px;
-    position: relative; cursor: pointer; transition: background 0.25s;
-  }
-  .settings-toggle.on { background: var(--primary); }
-  .settings-toggle::after {
-    content: ''; position: absolute; top: 3px; left: 3px;
-    width: 20px; height: 20px; background: white; border-radius: 50%;
-    transition: transform 0.25s; box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-  }
-  .settings-toggle.on::after { transform: translateX(18px); }
-
-  .api-input-wrap { padding: 0 20px 16px; }
-  .api-input {
-    width: 100%; padding: 14px 16px; border-radius: 14px;
-    border: 1.5px solid var(--border); background: var(--surface);
-    font-size: 13px; color: var(--textPrimary); font-family: 'Inter', sans-serif;
-    outline: none; transition: border-color 0.15s;
-  }
-  .api-input:focus { border-color: var(--primary); }
-  .api-save-btn {
-    width: 100%; padding: 13px; background: var(--primary); color: var(--textPrimary);
-    border: none; border-radius: 14px; font-size: 14px; font-weight: 700;
-    cursor: pointer; margin-top: 8px; transition: transform 0.15s;
-  }
-
-  /* ===================== BOTTOM NAV ===================== */
-  .bottom-nav {
-    position: fixed; bottom: 0;
-    width: 390px;
-    background: var(--navBg); border-radius: 24px 24px 0 0;
-    display: flex; padding: 12px 20px 20px;
-    gap: 4px; z-index: 100;
-  }
-  .nav-item {
-    flex: 1; display: flex; flex-direction: column; align-items: center;
-    gap: 4px; cursor: pointer; padding: 8px 4px; border-radius: 14px;
-    transition: background 0.15s; -webkit-tap-highlight-color: transparent;
-  }
-  .nav-item:hover { background: rgba(255,255,255,0.06); }
-  .nav-icon { font-size: 20px; line-height: 1; }
-  .nav-label { font-size: 10px; font-weight: 600; color: var(--textMutedDark); letter-spacing: 0.3px; }
-  .nav-item.active .nav-label { color: var(--primary); }
-  .nav-pip { width: 4px; height: 4px; border-radius: 2px; background: transparent; transition: background 0.15s; }
-  .nav-item.active .nav-pip { background: var(--primary); }
-
-  /* Typing animation */
-  .typing { display: inline-flex; gap: 4px; align-items: center; padding: 8px 0; }
-  .typing span { width: 6px; height: 6px; background: var(--secondary); border-radius: 50%; animation: typing 1.2s infinite; }
-  .typing span:nth-child(2) { animation-delay: 0.2s; }
-  .typing span:nth-child(3) { animation-delay: 0.4s; }
-  @keyframes typing { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-6px)} }
-
-  /* Scrollable inner content */
-  .scroll-content { overflow-y: auto; flex: 1; scrollbar-width: none; }
-  .scroll-content::-webkit-scrollbar { display: none; }
-
-  /* Mobile full screen */
-  @media (max-width: 390px) {
-    .phone { width: 100%; }
-    .bottom-nav { width: 100%; border-radius: 0; }
-  }
+  body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--textPrimary);min-height:100vh;display:flex;justify-content:center;}
+  .phone{width:390px;min-height:100vh;background:var(--bg);position:relative;display:flex;flex-direction:column;}
+  /* status bar */
+  .status-bar{background:var(--bg);padding:12px 20px 0;display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:700;color:var(--textPrimary);}
+  .status-right{display:flex;gap:6px;align-items:center;}
+  /* screens */
+  .screen{display:none;flex-direction:column;flex:1;padding-bottom:80px;}
+  .screen.active{display:flex;}
+  /* header */
+  .home-header{padding:16px 20px 12px;display:flex;justify-content:space-between;align-items:flex-start;}
+  .home-header-left h2{font-size:11px;font-weight:700;color:var(--textMuted);letter-spacing:1px;text-transform:uppercase;}
+  .date{font-size:22px;font-weight:900;color:var(--textPrimary);letter-spacing:-0.5px;}
+  .live-badge{background:var(--primary);color:var(--textPrimary);font-size:10px;font-weight:800;padding:5px 11px;border-radius:20px;display:flex;align-items:center;gap:5px;}
+  .live-dot{width:6px;height:6px;background:#000;border-radius:50%;animation:blink 1s infinite;}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+  /* scores */
+  .scores-row{display:flex;gap:12px;padding:0 20px 16px;}
+  .score-card{flex:1;background:var(--navBg);border-radius:20px;padding:16px;text-align:center;position:relative;overflow:hidden;}
+  .score-card::before{content:'';position:absolute;top:-20px;right:-20px;width:80px;height:80px;border-radius:50%;background:rgba(197,241,53,0.07);}
+  .score-label{font-size:10px;font-weight:700;color:var(--textMutedDark);letter-spacing:1px;text-transform:uppercase;}
+  .score-number{font-size:44px;font-weight:900;letter-spacing:-2px;line-height:1;margin:4px 0;transition:color 0.5s;}
+  .score-number.high{color:var(--scoreHigh);}
+  .score-number.mid{color:var(--scoreMid);}
+  .score-number.low{color:var(--scoreLow);}
+  .score-sub{font-size:11px;color:var(--textMutedDark);font-weight:500;}
+  /* stats grid */
+  .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 20px 16px;}
+  .stat-card{background:var(--surface);border-radius:20px;padding:16px;border:1.5px solid var(--border);}
+  .stat-card.dark{background:var(--navBg);border-color:transparent;}
+  .stat-icon{font-size:22px;margin-bottom:8px;}
+  .stat-value{font-size:26px;font-weight:900;color:var(--textPrimary);letter-spacing:-1px;transition:all 0.4s;}
+  .stat-card.dark .stat-value{color:var(--textOnDark);}
+  .stat-label{font-size:10px;color:var(--textMuted);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-top:2px;}
+  .stat-sub{font-size:10px;color:var(--textMuted);margin-top:2px;}
+  /* battery bar */
+  .batt-wrap{margin:0 20px 16px;}
+  .batt-outer{height:8px;background:var(--border);border-radius:4px;overflow:hidden;}
+  .batt-inner{height:100%;border-radius:4px;transition:width 1s,background 1s;}
+  .batt-row{display:flex;justify-content:space-between;margin-top:4px;font-size:11px;color:var(--textMuted);font-weight:600;}
+  /* AI card */
+  .ai-card{margin:0 20px 16px;background:var(--surface);border-radius:20px;border:1.5px solid var(--border);overflow:hidden;}
+  .ai-card-hdr{padding:14px 16px 10px;display:flex;justify-content:space-between;align-items:center;}
+  .ai-label{font-size:11px;font-weight:700;color:var(--textMuted);letter-spacing:0.8px;text-transform:uppercase;}
+  .ai-badge{background:var(--primary);color:#000;font-size:10px;font-weight:800;padding:3px 9px;border-radius:10px;}
+  .ai-body{padding:0 16px 16px;}
+  .ai-text{font-size:13px;color:var(--textSecondary);line-height:1.75;min-height:52px;}
+  .ai-meta{font-size:10px;color:var(--textMuted);margin-top:6px;}
+  .ai-btn{width:100%;margin-top:10px;padding:12px;background:var(--primary);color:#000;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer;transition:opacity 0.2s;}
+  .ai-btn:disabled{opacity:0.5;cursor:not-allowed;}
+  /* section title */
+  .sec-title{padding:0 20px 10px;font-size:11px;font-weight:700;color:var(--textMuted);letter-spacing:0.8px;text-transform:uppercase;}
+  /* live feed */
+  .feed{margin:0 20px 16px;display:flex;flex-direction:column;gap:6px;}
+  .feed-item{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--surface);border-radius:12px;border:1.5px solid var(--border);animation:slideIn 0.3s ease;}
+  @keyframes slideIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+  .feed-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+  .g{background:var(--scoreHigh);box-shadow:0 0 6px var(--scoreHigh);}
+  .y{background:var(--scoreMid);}
+  .r{background:var(--scoreLow);}
+  .b{background:#64B5F6;}
+  .p{background:var(--secondary);}
+  .feed-text{font-size:12px;color:var(--textSecondary);flex:1;line-height:1.4;}
+  .feed-time{font-size:10px;color:var(--textMuted);font-weight:700;white-space:nowrap;}
+  /* timeline */
+  .scr-hdr{padding:16px 20px 12px;display:flex;justify-content:space-between;align-items:center;}
+  .scr-hdr h1{font-size:14px;font-weight:800;letter-spacing:0.8px;text-transform:uppercase;}
+  .day-sel{display:flex;gap:8px;padding:0 20px 12px;overflow-x:auto;scrollbar-width:none;}
+  .day-chip{flex-shrink:0;padding:8px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;background:var(--surface);border:1.5px solid var(--border);color:var(--textSecondary);transition:all 0.15s;}
+  .day-chip.on{background:var(--navBg);border-color:transparent;color:var(--primary);}
+  .fchips{display:flex;gap:6px;padding:0 20px 14px;overflow-x:auto;scrollbar-width:none;}
+  .fchip{flex-shrink:0;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;background:var(--surface);border:1.5px solid var(--border);color:var(--textMuted);transition:all 0.15s;}
+  .fchip.on{background:var(--primary);border-color:transparent;color:#000;}
+  .tl-list{padding:0 20px;}
+  .tl-item{display:flex;gap:12px;margin-bottom:4px;}
+  .tl-tcol{width:46px;text-align:right;flex-shrink:0;}
+  .tl-t{font-size:11px;font-weight:600;color:var(--textMuted);padding-top:14px;}
+  .tl-lcol{display:flex;flex-direction:column;align-items:center;width:28px;flex-shrink:0;}
+  .tl-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;margin-top:8px;}
+  .tl-line{width:2px;flex:1;background:var(--border);margin-top:2px;min-height:16px;}
+  .tl-card{flex:1;background:var(--surface);border-radius:14px;border:1.5px solid var(--border);padding:10px 12px;margin-bottom:6px;}
+  .tl-card.latest{border-color:var(--primary);}
+  .tl-title{font-size:13px;font-weight:600;}
+  .tl-sub{font-size:11px;color:var(--textMuted);margin-top:2px;}
+  .tl-dur{display:inline-block;margin-top:4px;padding:2px 8px;background:var(--bg);border-radius:8px;font-size:10px;font-weight:600;color:var(--textSecondary);}
+  /* insights */
+  .tab-bar{display:flex;border-bottom:1.5px solid var(--border);padding:0 20px;margin-bottom:16px;}
+  .tab{flex:1;padding:10px 0;text-align:center;cursor:pointer;font-size:11px;font-weight:700;color:var(--textMuted);letter-spacing:0.8px;text-transform:uppercase;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all 0.15s;}
+  .tab.on{color:var(--primary);border-bottom-color:var(--primary);}
+  .tabp{display:none;padding:0 20px;}
+  .tabp.on{display:block;}
+  .ins-card{background:var(--surface);border-radius:20px;border:1.5px solid var(--border);padding:16px;margin-bottom:12px;}
+  .ins-title{font-size:12px;font-weight:700;color:var(--textMuted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;}
+  .bars{display:flex;align-items:flex-end;gap:8px;height:80px;}
+  .bar-w{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;}
+  .bar-o{width:100%;background:var(--bg);border-radius:6px;flex:1;display:flex;flex-direction:column;justify-content:flex-end;}
+  .bar-i{border-radius:6px;transition:height 0.8s ease;}
+  .bar-l{font-size:10px;color:var(--textMuted);font-weight:600;}
+  .pat-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--bg);}
+  .pat-row:last-child{border-bottom:none;}
+  .pat-icon{font-size:22px;}
+  .pat-info{flex:1;}
+  .pat-name{font-size:13px;font-weight:600;}
+  .pat-desc{font-size:12px;color:var(--textMuted);margin-top:2px;}
+  .pat-badge{background:var(--bg);border-radius:10px;padding:4px 10px;font-size:11px;font-weight:600;color:var(--textSecondary);white-space:nowrap;}
+  .week-card{background:var(--navBg);border-radius:20px;padding:20px;margin-bottom:16px;}
+  .week-title{font-size:11px;font-weight:700;color:var(--textMutedDark);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;}
+  .week-text{font-size:13px;color:var(--textOnDark);line-height:1.75;min-height:80px;}
+  .week-btn{width:100%;padding:14px;background:var(--primary);color:#000;border:none;border-radius:14px;font-size:14px;font-weight:800;cursor:pointer;margin-top:12px;transition:opacity 0.2s;}
+  .week-btn:disabled{opacity:0.5;cursor:not-allowed;}
+  /* settings */
+  .set-sec{padding:0 20px 16px;}
+  .set-lbl{font-size:11px;font-weight:700;color:var(--textMuted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;}
+  .set-card{background:var(--surface);border-radius:20px;border:1.5px solid var(--border);overflow:hidden;}
+  .set-row{display:flex;align-items:center;padding:14px 16px;gap:12px;border-bottom:1px solid var(--bg);cursor:pointer;transition:background 0.15s;}
+  .set-row:last-child{border-bottom:none;}
+  .set-row:hover{background:var(--bg);}
+  .set-ri{font-size:20px;width:32px;text-align:center;}
+  .set-info{flex:1;}
+  .set-t{font-size:14px;font-weight:600;}
+  .set-s{font-size:12px;color:var(--textMuted);margin-top:2px;}
+  .toggle{width:44px;height:26px;background:var(--border);border-radius:13px;position:relative;cursor:pointer;transition:background 0.25s;flex-shrink:0;}
+  .toggle.on{background:var(--primary);}
+  .toggle::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;background:#fff;border-radius:50%;transition:transform 0.25s;box-shadow:0 1px 3px rgba(0,0,0,0.2);}
+  .toggle.on::after{transform:translateX(18px);}
+  .api-inp{width:100%;padding:14px 16px;border-radius:14px;border:1.5px solid var(--border);background:var(--surface);font-size:13px;color:var(--textPrimary);font-family:'Inter',sans-serif;outline:none;transition:border-color 0.15s;}
+  .api-inp:focus{border-color:var(--primary);}
+  .api-btn{width:100%;padding:13px;background:var(--primary);color:#000;border:none;border-radius:14px;font-size:14px;font-weight:800;cursor:pointer;margin-top:8px;}
+  /* nav */
+  .nav{position:fixed;bottom:0;width:390px;background:var(--navBg);border-radius:24px 24px 0 0;display:flex;padding:12px 20px 20px;gap:4px;z-index:100;}
+  .nitem{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:8px 4px;border-radius:14px;transition:background 0.15s;}
+  .nitem:hover{background:rgba(255,255,255,0.06);}
+  .nicon{font-size:20px;line-height:1;}
+  .nlbl{font-size:10px;font-weight:600;color:var(--textMutedDark);letter-spacing:0.3px;}
+  .nitem.on .nlbl{color:var(--primary);}
+  .npip{width:4px;height:4px;border-radius:2px;background:transparent;}
+  .nitem.on .npip{background:var(--primary);}
+  /* misc */
+  .scroll{overflow-y:auto;flex:1;scrollbar-width:none;}
+  .scroll::-webkit-scrollbar{display:none;}
+  .typing{display:inline-flex;gap:4px;align-items:center;padding:4px 0;}
+  .typing span{width:6px;height:6px;background:var(--secondary);border-radius:50%;animation:t 1.2s infinite;}
+  .typing span:nth-child(2){animation-delay:.2s;}
+  .typing span:nth-child(3){animation-delay:.4s;}
+  @keyframes t{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}
+  .badge-ok{font-size:11px;font-weight:700;color:var(--scoreHigh);}
+  .badge-no{font-size:11px;font-weight:700;color:var(--scoreLow);}
+  .badge-mid{font-size:11px;font-weight:700;color:var(--scoreMid);}
+  .toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:var(--navBg);color:var(--textOnDark);padding:10px 20px;border-radius:20px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:opacity 0.3s;pointer-events:none;white-space:nowrap;}
+  .toast.show{opacity:1;}
+  @media(max-width:390px){.phone,.nav{width:100%;}.nav{border-radius:0;}}
 </style>
 </head>
 <body>
 <div class="phone">
+  <div class="toast" id="toast"></div>
+
   <!-- Status Bar -->
   <div class="status-bar">
-    <span>9:41</span>
+    <span id="clock">00:00:00</span>
     <div class="status-right">
-      <span>●●●●</span>
-      <span>WiFi</span>
-      <span>🔋</span>
+      <span id="net-icon">📶</span>
+      <span id="batt-icon">🔋</span>
+      <span id="batt-pct" style="font-variant-numeric:tabular-nums;"></span>
     </div>
   </div>
 
-  <!-- ===================== HOME SCREEN ===================== -->
-  <div class="screen active" id="screen-home">
-    <div class="scroll-content">
+  <!-- HOME -->
+  <div class="screen active" id="s-home">
+    <div class="scroll">
       <div class="home-header">
         <div class="home-header-left">
-          <h2>LIFELENS</h2>
+          <h2>LIFELENS · LIVE</h2>
           <div class="date" id="today-date"></div>
         </div>
         <div class="live-badge"><div class="live-dot"></div>LIVE</div>
       </div>
 
-      <!-- Score Cards -->
       <div class="scores-row">
         <div class="score-card">
           <div class="score-label">PRODUCTIVITY</div>
-          <div class="score-number high" id="prod-score">74</div>
-          <div class="score-sub">Above avg ↑</div>
+          <div class="score-number high" id="prod-score">—</div>
+          <div class="score-sub" id="prod-sub">Loading...</div>
         </div>
         <div class="score-card">
           <div class="score-label">WELLBEING</div>
-          <div class="score-number mid" id="well-score">61</div>
-          <div class="score-sub">Needs focus</div>
+          <div class="score-number mid" id="well-score">—</div>
+          <div class="score-sub" id="well-sub">Loading...</div>
         </div>
       </div>
 
-      <!-- Stats Grid -->
       <div class="stats-grid">
-        <div class="stat-card accent">
-          <div class="stat-icon">👣</div>
-          <div class="stat-value" style="color: var(--primary);">8,247</div>
-          <div class="stat-label">Steps Today</div>
+        <div class="stat-card dark">
+          <div class="stat-icon">🖥️</div>
+          <div class="stat-value" id="st-val" style="color:var(--primary);">0m</div>
+          <div class="stat-label">Screen Time</div>
+          <div class="stat-sub" id="st-sub">Live session</div>
         </div>
         <div class="stat-card">
-          <div class="stat-icon">📱</div>
-          <div class="stat-value">4h 32m</div>
-          <div class="stat-label">Screen Time</div>
+          <div class="stat-icon">🔋</div>
+          <div class="stat-value" id="batt-val">—</div>
+          <div class="stat-label">Battery</div>
+          <div class="stat-sub" id="batt-sub">Fetching...</div>
         </div>
         <div class="stat-card">
           <div class="stat-icon">🤚</div>
-          <div class="stat-value">37</div>
-          <div class="stat-label">Phone Pickups</div>
+          <div class="stat-value" id="pu-val">0</div>
+          <div class="stat-label">Tab Returns</div>
+          <div class="stat-sub">Since session start</div>
         </div>
-        <div class="stat-card accent">
+        <div class="stat-card dark">
           <div class="stat-icon">📍</div>
-          <div class="stat-value" style="color: var(--secondary);">3</div>
-          <div class="stat-label">Places Visited</div>
+          <div class="stat-value" id="loc-val" style="color:var(--secondary);font-size:13px;margin-top:4px;">Requesting...</div>
+          <div class="stat-label">Location</div>
+          <div class="stat-sub" id="loc-sub"></div>
         </div>
       </div>
 
-      <!-- AI Summary -->
+      <div class="batt-wrap">
+        <div class="batt-outer"><div class="batt-inner" id="batt-bar" style="width:0%;background:var(--scoreHigh);"></div></div>
+        <div class="batt-row"><span id="batt-lbl">Battery</span><span id="batt-charge"></span></div>
+      </div>
+
       <div class="ai-card">
-        <div class="ai-card-header">
-          <div class="ai-label">✦ AI SUMMARY</div>
+        <div class="ai-card-hdr">
+          <div class="ai-label">✦ REAL-TIME AI INSIGHT</div>
           <div class="ai-badge">CLAUDE</div>
         </div>
-        <div class="ai-content">
-          <div class="ai-narrative" id="ai-text">
-            Your morning was focused — 2.3 hours of deep work before 10am with no distractions.
-            You spent 47 minutes on Instagram after lunch (your usual afternoon dip).
-            The afternoon walk at 4pm brought a nice 2,200-step boost.
-            Overall a solid day, slightly above your weekly average.
+        <div class="ai-body">
+          <div class="ai-text" id="ai-text"><div class="typing"><span></span><span></span><span></span></div></div>
+          <div class="ai-meta" id="ai-meta"></div>
+          <button class="ai-btn" id="ai-btn" onclick="genSummary()">✦ Refresh AI Insight</button>
+        </div>
+      </div>
+
+      <div class="sec-title">LIVE EVENT FEED</div>
+      <div class="feed" id="feed"></div>
+
+      <div class="sec-title" style="margin-top:4px;">NETWORK</div>
+      <div style="padding:0 20px 24px;">
+        <div class="stat-card" style="display:flex;align-items:center;gap:12px;padding:14px 16px;">
+          <span style="font-size:24px;" id="net-big">📶</span>
+          <div style="flex:1;">
+            <div style="font-size:15px;font-weight:800;" id="net-type">Detecting...</div>
+            <div style="font-size:12px;color:var(--textMuted);margin-top:2px;" id="net-detail"></div>
           </div>
-          <button class="ai-generate-btn" onclick="regenerateSummary()">✦ Regenerate with Claude AI</button>
+          <div id="net-badge"></div>
         </div>
       </div>
-
-      <!-- Top Apps -->
-      <div class="section-title">TOP APPS TODAY</div>
-
-      <div class="app-bar-row">
-        <div class="app-bar-icon">💼</div>
-        <div class="app-bar-info">
-          <div class="app-bar-name">VS Code / Work</div>
-          <div class="app-bar-bg"><div class="app-bar-fill" style="width:72%;background:var(--productive);"></div></div>
-        </div>
-        <div class="app-bar-time">2h 18m</div>
-      </div>
-      <div class="app-bar-row">
-        <div class="app-bar-icon">📸</div>
-        <div class="app-bar-info">
-          <div class="app-bar-name">Instagram</div>
-          <div class="app-bar-bg"><div class="app-bar-fill" style="width:52%;background:var(--social);"></div></div>
-        </div>
-        <div class="app-bar-time">47m</div>
-      </div>
-      <div class="app-bar-row">
-        <div class="app-bar-icon">💬</div>
-        <div class="app-bar-info">
-          <div class="app-bar-name">WhatsApp</div>
-          <div class="app-bar-bg"><div class="app-bar-fill" style="width:38%;background:var(--messaging);"></div></div>
-        </div>
-        <div class="app-bar-time">32m</div>
-      </div>
-      <div class="app-bar-row">
-        <div class="app-bar-icon">▶️</div>
-        <div class="app-bar-info">
-          <div class="app-bar-name">YouTube</div>
-          <div class="app-bar-bg"><div class="app-bar-fill" style="width:28%;background:var(--entertainment);"></div></div>
-        </div>
-        <div class="app-bar-time">21m</div>
-      </div>
-      <div style="height:16px;"></div>
     </div>
   </div>
 
-  <!-- ===================== TIMELINE SCREEN ===================== -->
-  <div class="screen" id="screen-timeline">
-    <div class="screen-header">
+  <!-- TIMELINE -->
+  <div class="screen" id="s-timeline">
+    <div class="scr-hdr">
       <h1>TIMELINE</h1>
-      <span style="font-size:11px;color:var(--textMuted);font-weight:600;">47 events</span>
+      <span style="font-size:11px;color:var(--textMuted);font-weight:600;" id="ev-count">0 events</span>
     </div>
-    <div class="day-selector">
-      <div class="day-chip">Mon 4</div>
-      <div class="day-chip">Tue 5</div>
-      <div class="day-chip">Wed 6</div>
-      <div class="day-chip">Thu 7</div>
-      <div class="day-chip">Fri 8</div>
-      <div class="day-chip">Sat 9</div>
-      <div class="day-chip active" id="today-chip">Today</div>
+    <div class="day-sel" id="day-sel"></div>
+    <div class="fchips">
+      <div class="fchip on" onclick="setFilter('all',this)">All</div>
+      <div class="fchip" onclick="setFilter('focus',this)">🖥 Focus</div>
+      <div class="fchip" onclick="setFilter('location',this)">📍 Location</div>
+      <div class="fchip" onclick="setFilter('battery',this)">🔋 Battery</div>
+      <div class="fchip" onclick="setFilter('network',this)">📶 Network</div>
+      <div class="fchip" onclick="setFilter('ai',this)">✦ AI</div>
     </div>
-    <div class="filter-chips">
-      <div class="filter-chip on">All</div>
-      <div class="filter-chip">📱 Apps</div>
-      <div class="filter-chip">📍 Location</div>
-      <div class="filter-chip">🏃 Activity</div>
-      <div class="filter-chip">🖥 Screen</div>
-    </div>
-    <div class="scroll-content">
-      <div class="timeline-list" id="timeline-list">
-        <!-- Dynamically filled -->
-      </div>
-    </div>
+    <div class="scroll"><div class="tl-list" id="tl-list"></div></div>
   </div>
 
-  <!-- ===================== INSIGHTS SCREEN ===================== -->
-  <div class="screen" id="screen-insights">
-    <div class="screen-header">
-      <h1>INSIGHTS</h1>
-    </div>
+  <!-- INSIGHTS -->
+  <div class="screen" id="s-insights">
+    <div class="scr-hdr"><h1>INSIGHTS</h1></div>
     <div class="tab-bar">
-      <div class="tab active" onclick="switchTab(this,'trends')">TRENDS</div>
+      <div class="tab on" onclick="switchTab(this,'trends')">TRENDS</div>
       <div class="tab" onclick="switchTab(this,'patterns')">PATTERNS</div>
       <div class="tab" onclick="switchTab(this,'weekly')">WEEKLY AI</div>
     </div>
-    <div class="scroll-content">
-      <!-- Trends Tab -->
-      <div class="tab-content active" id="tab-trends">
-        <div class="insight-card">
-          <div class="insight-card-title">Screen Time — Last 7 Days</div>
-          <div class="chart-bars">
-            <div class="chart-bar-wrap">
-              <div class="chart-bar-outer"><div class="chart-bar-inner" style="height:55%;"></div></div>
-              <div class="chart-bar-label">M</div>
-            </div>
-            <div class="chart-bar-wrap">
-              <div class="chart-bar-outer"><div class="chart-bar-inner" style="height:80%;"></div></div>
-              <div class="chart-bar-label">T</div>
-            </div>
-            <div class="chart-bar-wrap">
-              <div class="chart-bar-outer"><div class="chart-bar-inner" style="height:45%;"></div></div>
-              <div class="chart-bar-label">W</div>
-            </div>
-            <div class="chart-bar-wrap">
-              <div class="chart-bar-outer"><div class="chart-bar-inner" style="height:90%;background:var(--tertiary);"></div></div>
-              <div class="chart-bar-label">T</div>
-            </div>
-            <div class="chart-bar-wrap">
-              <div class="chart-bar-outer"><div class="chart-bar-inner" style="height:60%;"></div></div>
-              <div class="chart-bar-label">F</div>
-            </div>
-            <div class="chart-bar-wrap">
-              <div class="chart-bar-outer"><div class="chart-bar-inner" style="height:100%;background:var(--tertiary);"></div></div>
-              <div class="chart-bar-label">S</div>
-            </div>
-            <div class="chart-bar-wrap">
-              <div class="chart-bar-outer"><div class="chart-bar-inner" style="height:70%;"></div></div>
-              <div class="chart-bar-label">S</div>
-            </div>
-          </div>
-          <div style="margin-top:10px;font-size:12px;color:var(--textMuted);">Avg: 4h 12m · Peak: Thu (6h 48m)</div>
+    <div class="scroll">
+      <div class="tabp on" id="tab-trends">
+        <div class="ins-card">
+          <div class="ins-title">Session Time — Last 7 Days (min)</div>
+          <div class="bars" id="chart-st"></div>
+          <div style="margin-top:10px;font-size:12px;color:var(--textMuted);" id="chart-st-lbl"></div>
         </div>
-
-        <div class="insight-card">
-          <div class="insight-card-title">Steps — Last 7 Days</div>
-          <div class="chart-bars">
-            <div class="chart-bar-wrap">
-              <div class="chart-bar-outer"><div class="chart-bar-inner" style="height:40%;background:var(--secondary);"></div></div>
-              <div class="chart-bar-label">M</div>
-            </div>
-            <div class="chart-bar-wrap">
-              <div class="chart-bar-outer"><div class="chart-bar-inner" style="height:65%;background:var(--secondary);"></div></div>
-              <div class="chart-bar-label">T</div>
-            </div>
-            <div class="chart-bar-wrap">
-              <div class="chart-bar-outer"><div class="chart-bar-inner" style="height:85%;background:var(--scoreHigh);"></div></div>
-              <div class="chart-bar-label">W</div>
-            </div>
-            <div class="chart-bar-wrap">
-              <div class="chart-bar-outer"><div class="chart-bar-inner" style="height:30%;background:var(--secondary);"></div></div>
-              <div class="chart-bar-label">T</div>
-            </div>
-            <div class="chart-bar-wrap">
-              <div class="chart-bar-outer"><div class="chart-bar-inner" style="height:70%;background:var(--secondary);"></div></div>
-              <div class="chart-bar-label">F</div>
-            </div>
-            <div class="chart-bar-wrap">
-              <div class="chart-bar-outer"><div class="chart-bar-inner" style="height:50%;background:var(--secondary);"></div></div>
-              <div class="chart-bar-label">S</div>
-            </div>
-            <div class="chart-bar-wrap">
-              <div class="chart-bar-outer"><div class="chart-bar-inner" style="height:82%;background:var(--scoreHigh);"></div></div>
-              <div class="chart-bar-label">S</div>
-            </div>
-          </div>
-          <div style="margin-top:10px;font-size:12px;color:var(--textMuted);">Avg: 6,840 steps · Best: Wed (10,200)</div>
+        <div class="ins-card">
+          <div class="ins-title">Tab Returns — Last 7 Days</div>
+          <div class="bars" id="chart-pu"></div>
+          <div style="margin-top:10px;font-size:12px;color:var(--textMuted);" id="chart-pu-lbl"></div>
         </div>
       </div>
-
-      <!-- Patterns Tab -->
-      <div class="tab-content" id="tab-patterns">
-        <div class="insight-card">
-          <div class="insight-card-title">Detected Patterns</div>
-          <div class="pattern-row">
-            <div class="pattern-icon">🌅</div>
-            <div class="pattern-info">
-              <div class="pattern-name">Early Morning Focus</div>
-              <div class="pattern-desc">Most productive 7–9am on weekdays</div>
-            </div>
-            <div class="pattern-badge">5/7 days</div>
-          </div>
-          <div class="pattern-row">
-            <div class="pattern-icon">📉</div>
-            <div class="pattern-info">
-              <div class="pattern-name">Post-Lunch Scroll</div>
-              <div class="pattern-desc">Instagram/YouTube spike 1–2pm daily</div>
-            </div>
-            <div class="pattern-badge">Every day</div>
-          </div>
-          <div class="pattern-row">
-            <div class="pattern-icon">🚶</div>
-            <div class="pattern-info">
-              <div class="pattern-name">Evening Walk</div>
-              <div class="pattern-desc">Movement burst near 4–5pm</div>
-            </div>
-            <div class="pattern-badge">4/7 days</div>
-          </div>
-          <div class="pattern-row">
-            <div class="pattern-icon">🌙</div>
-            <div class="pattern-info">
-              <div class="pattern-name">Late Night Screen</div>
-              <div class="pattern-desc">Phone use after 11pm 3x this week</div>
-            </div>
-            <div class="pattern-badge" style="color:var(--tertiary);">⚠ 3 nights</div>
-          </div>
-        </div>
+      <div class="tabp" id="tab-patterns">
+        <div class="ins-card"><div class="ins-title">Detected Patterns</div><div id="pat-list"></div></div>
       </div>
-
-      <!-- Weekly AI Tab -->
-      <div class="tab-content" id="tab-weekly">
-        <div class="weekly-ai-card">
-          <div class="weekly-ai-title">✦ CLAUDE WEEKLY REPORT</div>
-          <div class="weekly-ai-text" id="weekly-text">
-            This week you averaged 4h 12m of screen time daily — 18% above your personal baseline.
-            Your most productive day was Wednesday with 3.8 hours of focused work.
-            Thursday was your worst day for digital wellbeing: 6h 48m screen time, mostly passive content.
-            <br><br>
-            <strong style="color:var(--primary);">Recommendation:</strong> Try a hard stop at 10pm for screens.
-            Your sleep quality correlates strongly with your morning productivity scores.
-          </div>
-          <button class="weekly-ai-btn" onclick="regenerateWeekly()">✦ Generate New Report</button>
+      <div class="tabp" id="tab-weekly">
+        <div class="week-card">
+          <div class="week-title">✦ CLAUDE WEEKLY INTELLIGENCE REPORT</div>
+          <div class="week-text" id="week-text"><div class="typing" style="justify-content:center"><span></span><span></span><span></span></div></div>
+          <button class="week-btn" id="week-btn" onclick="genWeekly()">✦ Regenerate Report</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- ===================== SETTINGS SCREEN ===================== -->
-  <div class="screen" id="screen-settings">
-    <div class="screen-header"><h1>SETTINGS</h1></div>
-    <div class="scroll-content">
-      <!-- API Key -->
-      <div class="settings-section">
-        <div class="settings-label">CLAUDE AI</div>
-        <div class="api-input-wrap" style="padding:0 0 8px;">
-          <input class="api-input" type="password" placeholder="sk-ant-... (your Claude API key)" id="api-key-input">
-          <button class="api-save-btn" onclick="saveKey()">Save API Key</button>
-        </div>
+  <!-- SETTINGS -->
+  <div class="screen" id="s-settings">
+    <div class="scr-hdr"><h1>SETTINGS</h1></div>
+    <div class="scroll">
+      <div class="set-sec">
+        <div class="set-lbl">CLAUDE API KEY</div>
+        <input class="api-inp" type="password" id="api-inp" placeholder="sk-ant-...">
+        <button class="api-btn" onclick="saveKey()">Save Key</button>
+        <div style="font-size:11px;color:var(--textMuted);margin-top:6px;" id="key-status"></div>
       </div>
-
-      <!-- Tracking -->
-      <div class="settings-section">
-        <div class="settings-label">TRACKING</div>
-        <div class="settings-card">
-          <div class="settings-row" onclick="toggleSetting(this)">
-            <div class="settings-row-icon">📱</div>
-            <div class="settings-row-info">
-              <div class="settings-row-title">App Usage Tracking</div>
-              <div class="settings-row-sub">Every 5 minutes via UsageStats API</div>
-            </div>
-            <div class="settings-toggle on"></div>
+      <div class="set-sec">
+        <div class="set-lbl">LIVE PERMISSIONS</div>
+        <div class="set-card">
+          <div class="set-row" onclick="initLocation()">
+            <div class="set-ri">📍</div>
+            <div class="set-info"><div class="set-t">GPS Location</div><div class="set-s">Real coordinates + reverse geocode</div></div>
+            <div id="p-loc" class="badge-mid">TAP</div>
           </div>
-          <div class="settings-row" onclick="toggleSetting(this)">
-            <div class="settings-row-icon">📍</div>
-            <div class="settings-row-info">
-              <div class="settings-row-title">Location Tracking</div>
-              <div class="settings-row-sub">Every 10 minutes, background</div>
-            </div>
-            <div class="settings-toggle on"></div>
+          <div class="set-row" onclick="initMotion()">
+            <div class="set-ri">👣</div>
+            <div class="set-info"><div class="set-t">Accelerometer / Steps</div><div class="set-s">Step counting via DeviceMotion</div></div>
+            <div id="p-motion" class="badge-mid">TAP</div>
           </div>
-          <div class="settings-row" onclick="toggleSetting(this)">
-            <div class="settings-row-icon">👣</div>
-            <div class="settings-row-info">
-              <div class="settings-row-title">Step Counter</div>
-              <div class="settings-row-sub">Pedometer, always active</div>
-            </div>
-            <div class="settings-toggle on"></div>
+          <div class="set-row">
+            <div class="set-ri">🖥️</div>
+            <div class="set-info"><div class="set-t">Tab Visibility</div><div class="set-s">Tracking focus/blur in real-time</div></div>
+            <div class="badge-ok">ACTIVE</div>
           </div>
-          <div class="settings-row" onclick="toggleSetting(this)">
-            <div class="settings-row-icon">🖥</div>
-            <div class="settings-row-info">
-              <div class="settings-row-title">Screen On/Off Events</div>
-              <div class="settings-row-sub">Phone pickup detection</div>
-            </div>
-            <div class="settings-toggle on"></div>
+          <div class="set-row">
+            <div class="set-ri">🔋</div>
+            <div class="set-info"><div class="set-t">Battery API</div><div class="set-s">Real device battery level</div></div>
+            <div id="p-batt" class="badge-mid">LOADING</div>
+          </div>
+          <div class="set-row">
+            <div class="set-ri">📶</div>
+            <div class="set-info"><div class="set-t">Network API</div><div class="set-s">Real-time connection monitoring</div></div>
+            <div class="badge-ok">ACTIVE</div>
           </div>
         </div>
       </div>
-
-      <!-- Data -->
-      <div class="settings-section">
-        <div class="settings-label">DATA</div>
-        <div class="settings-card">
-          <div class="settings-row">
-            <div class="settings-row-icon">💾</div>
-            <div class="settings-row-info">
-              <div class="settings-row-title">Storage Used</div>
-              <div class="settings-row-sub">47.2 MB local SQLite database</div>
-            </div>
-            <div class="settings-row-right">→</div>
+      <div class="set-sec">
+        <div class="set-lbl">DATA</div>
+        <div class="set-card">
+          <div class="set-row">
+            <div class="set-ri">💾</div>
+            <div class="set-info"><div class="set-t">Storage Used</div><div class="set-s" id="storage-sz">Calculating...</div></div>
           </div>
-          <div class="settings-row" onclick="if(confirm('Delete all data? This cannot be undone.'))alert('Data cleared.')">
-            <div class="settings-row-icon">🗑</div>
-            <div class="settings-row-info">
-              <div class="settings-row-title" style="color:var(--tertiary);">Clear All Data</div>
-              <div class="settings-row-sub">Permanently delete all tracked events</div>
-            </div>
-            <div class="settings-row-right">→</div>
+          <div class="set-row">
+            <div class="set-ri">📊</div>
+            <div class="set-info"><div class="set-t">Total Events</div><div class="set-s" id="total-ev">0</div></div>
           </div>
-        </div>
-      </div>
-
-      <!-- Permissions -->
-      <div class="settings-section">
-        <div class="settings-label">PERMISSIONS</div>
-        <div class="settings-card">
-          <div class="settings-row">
-            <div class="settings-row-icon">🔓</div>
-            <div class="settings-row-info">
-              <div class="settings-row-title">Usage Access</div>
-              <div class="settings-row-sub">Android Settings → Special App Access</div>
-            </div>
-            <div style="font-size:11px;font-weight:700;color:var(--scoreHigh);">GRANTED</div>
+          <div class="set-row" onclick="exportData()">
+            <div class="set-ri">📤</div>
+            <div class="set-info"><div class="set-t">Export JSON</div><div class="set-s">Download all raw data</div></div>
+            <div style="font-size:18px;color:var(--textMuted);">→</div>
           </div>
-          <div class="settings-row">
-            <div class="settings-row-icon">🛰</div>
-            <div class="settings-row-info">
-              <div class="settings-row-title">Background Location</div>
-              <div class="settings-row-sub">Allow all the time</div>
-            </div>
-            <div style="font-size:11px;font-weight:700;color:var(--scoreHigh);">GRANTED</div>
+          <div class="set-row" onclick="if(confirm('Wipe ALL LifeLens data?'))clearData()">
+            <div class="set-ri">🗑️</div>
+            <div class="set-info"><div class="set-t" style="color:var(--tertiary);">Clear All Data</div><div class="set-s">Permanent — cannot undo</div></div>
+            <div style="font-size:18px;color:var(--textMuted);">→</div>
           </div>
         </div>
       </div>
@@ -743,151 +384,695 @@
     </div>
   </div>
 
-  <!-- Bottom Nav -->
-  <div class="bottom-nav">
-    <div class="nav-item active" onclick="showScreen('home',this)">
-      <div class="nav-icon">⬡</div>
-      <div class="nav-label">HOME</div>
-      <div class="nav-pip"></div>
-    </div>
-    <div class="nav-item" onclick="showScreen('timeline',this)">
-      <div class="nav-icon">⏱</div>
-      <div class="nav-label">TIMELINE</div>
-      <div class="nav-pip"></div>
-    </div>
-    <div class="nav-item" onclick="showScreen('insights',this)">
-      <div class="nav-icon">✦</div>
-      <div class="nav-label">INSIGHTS</div>
-      <div class="nav-pip"></div>
-    </div>
-    <div class="nav-item" onclick="showScreen('settings',this)">
-      <div class="nav-icon">⚙</div>
-      <div class="nav-label">SETTINGS</div>
-      <div class="nav-pip"></div>
-    </div>
+  <!-- Nav -->
+  <div class="nav">
+    <div class="nitem on" onclick="goTo('home',this)"><div class="nicon">⬡</div><div class="nlbl">HOME</div><div class="npip"></div></div>
+    <div class="nitem" onclick="goTo('timeline',this);renderTimeline()"><div class="nicon">⏱</div><div class="nlbl">TIMELINE</div><div class="npip"></div></div>
+    <div class="nitem" onclick="goTo('insights',this);renderInsights()"><div class="nicon">✦</div><div class="nlbl">INSIGHTS</div><div class="npip"></div></div>
+    <div class="nitem" onclick="goTo('settings',this);refreshSettings()"><div class="nicon">⚙</div><div class="nlbl">SETTINGS</div><div class="npip"></div></div>
   </div>
 </div>
 
 <script>
-// Today's date
-const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-const now = new Date();
-document.getElementById('today-date').textContent =
-  days[now.getDay()] + ', ' + months[now.getMonth()] + ' ' + now.getDate();
-document.getElementById('today-chip').textContent =
-  'Today ' + now.getDate();
+// ═══════════════════════════════════════════
+//  CONFIG
+// ═══════════════════════════════════════════
+const STORE = 'll3';
+// API key is stored in localStorage only — enter it in Settings
+// (Pre-loaded locally by user, never committed to source)
+function getKey() { return localStorage.getItem('ll_key') || ''; }
 
-// Screen navigation
-function showScreen(name, navEl) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById('screen-' + name).classList.add('active');
-  navEl.classList.add('active');
+// ═══════════════════════════════════════════
+//  STORAGE
+// ═══════════════════════════════════════════
+function loadStore() {
+  try { return JSON.parse(localStorage.getItem(STORE) || '{}'); } catch { return {}; }
+}
+function saveStore(d) {
+  try { localStorage.setItem(STORE, JSON.stringify(d)); } catch(e) {}
+}
+function dayKey(d = new Date()) {
+  return d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate();
+}
+function getDay(k = dayKey()) {
+  const s = loadStore();
+  if (!s[k]) s[k] = { stSec: 0, pickups: 0, events: [], batt: [], locs: [], steps: 0 };
+  return s[k];
+}
+function saveDay(data, k = dayKey()) {
+  const s = loadStore();
+  s[k] = data;
+  saveStore(s);
 }
 
-// Tab switching
-function switchTab(tabEl, name) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-  tabEl.classList.add('active');
-  document.getElementById('tab-' + name).classList.add('active');
+// ═══════════════════════════════════════════
+//  SESSION STATE
+// ═══════════════════════════════════════════
+const S = {
+  focusStart: Date.now(),
+  focusSec: 0,
+  pickups: 0,
+  battery: null,
+  location: null,
+  locationName: null,
+  steps: 0,
+  online: navigator.onLine,
+  aiLastRun: 0,
+};
+
+// ═══════════════════════════════════════════
+//  LOG EVENT
+// ═══════════════════════════════════════════
+const EV_COLORS = {focus:'g', location:'p', battery:'y', network:'b', ai:'p', session:'g'};
+function logEv(type, title, sub, icon='📌', bg='#E8EAF6') {
+  const t = new Date();
+  const ev = {
+    ts: t.getTime(),
+    type, title, sub, icon, bg,
+    time: t.toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit', hour12:false})
+  };
+  const day = getDay();
+  day.events.push(ev);
+  if (day.events.length > 300) day.events = day.events.slice(-300);
+  saveDay(day);
+  pushFeed(ev);
 }
 
-// Toggle settings
-function toggleSetting(row) {
-  const toggle = row.querySelector('.settings-toggle');
-  toggle.classList.toggle('on');
+// ═══════════════════════════════════════════
+//  LIVE FEED (home screen)
+// ═══════════════════════════════════════════
+function pushFeed(ev) {
+  const feed = document.getElementById('feed');
+  const col = EV_COLORS[ev.type] || 'b';
+  const el = document.createElement('div');
+  el.className = 'feed-item';
+  el.innerHTML = `<div class="feed-dot ${col}"></div>
+    <div class="feed-text"><strong>${ev.title}</strong> — ${ev.sub}</div>
+    <div class="feed-time">${ev.time}</div>`;
+  feed.insertBefore(el, feed.firstChild);
+  while (feed.children.length > 7) feed.removeChild(feed.lastChild);
 }
 
-// Timeline data
-const timelineEvents = [
-  { time: '07:12', icon: '🌅', bg: '#FFF9C4', title: 'Screen On', sub: 'Morning start', dur: null },
-  { time: '07:13', icon: '💬', bg: '#E3F2FD', title: 'WhatsApp', sub: 'com.whatsapp', dur: '18m' },
-  { time: '07:31', icon: '📍', bg: '#E8F5E9', title: 'Home', sub: 'Mumbai, MH', dur: null },
-  { time: '08:05', icon: '💼', bg: '#F3E5F5', title: 'VS Code', sub: 'com.microsoft.vscode', dur: '1h 22m' },
-  { time: '09:27', icon: '👣', bg: '#FFF3E0', title: 'Walking', sub: '320 steps', dur: '4m' },
-  { time: '09:31', icon: '💼', bg: '#F3E5F5', title: 'VS Code', sub: 'com.microsoft.vscode', dur: '56m' },
-  { time: '10:28', icon: '📸', bg: '#FCE4EC', title: 'Instagram', sub: 'com.instagram.android', dur: '11m' },
-  { time: '10:39', icon: '📍', bg: '#E8F5E9', title: 'Coffee Shop', sub: 'Starbucks, Bandra', dur: null },
-  { time: '12:14', icon: '🍽', bg: '#FFF9C4', title: 'Lunch Break', sub: 'Activity paused', dur: null },
-  { time: '13:02', icon: '📸', bg: '#FCE4EC', title: 'Instagram', sub: 'com.instagram.android', dur: '34m' },
-  { time: '13:36', icon: '▶️', bg: '#FFF3E0', title: 'YouTube', sub: 'com.google.android.youtube', dur: '21m' },
-  { time: '14:00', icon: '💼', bg: '#F3E5F5', title: 'VS Code', sub: 'com.microsoft.vscode', dur: '2h 10m' },
-  { time: '16:11', icon: '👣', bg: '#FFF3E0', title: 'Walk Detected', sub: '2,240 steps', dur: '22m' },
-  { time: '16:33', icon: '📍', bg: '#E8F5E9', title: 'Park', sub: 'Joggers Park, Bandra', dur: null },
-  { time: '18:44', icon: '📍', bg: '#E8F5E9', title: 'Home', sub: 'Mumbai, MH', dur: null },
-  { time: '21:15', icon: '📺', bg: '#EDE7F6', title: 'Netflix', sub: 'com.netflix.mediaclient', dur: '48m' },
-  { time: '22:03', icon: '🌙', bg: '#E8EAF6', title: 'Screen Off', sub: 'Bedtime', dur: null },
-];
+// ═══════════════════════════════════════════
+//  CLOCK + DATE
+// ═══════════════════════════════════════════
+const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function tickClock() {
+  const n = new Date();
+  document.getElementById('clock').textContent =
+    n.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+  // Update title with live prod score
+  const ps = document.getElementById('prod-score').textContent;
+  if (ps !== '—') document.title = `LifeLens · ${ps} prod`;
+}
+setInterval(tickClock, 1000);
+tickClock();
+(function() {
+  const n = new Date();
+  document.getElementById('today-date').textContent =
+    DAYS[n.getDay()] + ', ' + MONTHS[n.getMonth()] + ' ' + n.getDate();
+})();
 
-const tlList = document.getElementById('timeline-list');
-timelineEvents.forEach((ev, i) => {
-  const isLast = i === timelineEvents.length - 1;
-  tlList.innerHTML += `
-    <div class="timeline-item">
-      <div class="tl-time-col"><div class="tl-time">${ev.time}</div></div>
-      <div class="tl-line-col">
-        <div class="tl-dot" style="background:${ev.bg}">${ev.icon}</div>
-        ${!isLast ? '<div class="tl-line"></div>' : ''}
-      </div>
-      <div style="flex:1;padding-top:8px;">
-        <div class="tl-card">
-          <div class="tl-card-title">${ev.title}</div>
-          <div class="tl-card-sub">${ev.sub}</div>
-          ${ev.dur ? `<div class="tl-card-duration">${ev.dur}</div>` : ''}
-        </div>
-      </div>
-    </div>`;
+// ═══════════════════════════════════════════
+//  BATTERY (real)
+// ═══════════════════════════════════════════
+function initBattery() {
+  if (!('getBattery' in navigator)) {
+    document.getElementById('batt-val').textContent = 'N/A';
+    document.getElementById('batt-sub').textContent = 'Not supported';
+    document.getElementById('p-batt').textContent = 'N/A';
+    document.getElementById('p-batt').className = 'badge-no';
+    return;
+  }
+  navigator.getBattery().then(b => {
+    S.battery = b;
+    updateBattUI(b);
+    document.getElementById('p-batt').textContent = 'ACTIVE';
+    document.getElementById('p-batt').className = 'badge-ok';
+    b.addEventListener('levelchange', () => {
+      updateBattUI(b);
+      const pct = Math.round(b.level * 100);
+      const day = getDay(); day.batt.push({ts:Date.now(), pct, ch:b.charging}); saveDay(day);
+      logEv('battery','Battery → '+pct+'%', b.charging?'Charging':'Discharging','🔋','#E8F5E9');
+    });
+    b.addEventListener('chargingchange', () => {
+      updateBattUI(b);
+      logEv('battery', b.charging?'Plugged In ⚡':'Unplugged 🔌',
+        Math.round(b.level*100)+'% battery', b.charging?'⚡':'🔌', '#FFF9C4');
+    });
+  }).catch(() => {
+    document.getElementById('p-batt').textContent = 'BLOCKED';
+    document.getElementById('p-batt').className = 'badge-no';
+  });
+}
+function updateBattUI(b) {
+  const pct = Math.round(b.level * 100);
+  const ch = b.charging;
+  document.getElementById('batt-val').textContent = pct + '%';
+  document.getElementById('batt-sub').textContent = ch ? '⚡ Charging' : pct > 20 ? 'Normal' : '⚠️ Low!';
+  document.getElementById('batt-pct').textContent = pct + '%';
+  document.getElementById('batt-icon').textContent = ch ? '⚡' : pct > 50 ? '🔋' : pct > 20 ? '🪫' : '❗';
+  document.getElementById('batt-bar').style.width = pct + '%';
+  document.getElementById('batt-bar').style.background = pct > 50 ? 'var(--scoreHigh)' : pct > 20 ? 'var(--scoreMid)' : 'var(--scoreLow)';
+  document.getElementById('batt-lbl').textContent = 'Battery: ' + pct + '%';
+  document.getElementById('batt-charge').textContent = ch ? '⚡ Charging' : '';
+}
+
+// ═══════════════════════════════════════════
+//  GPS LOCATION (real)
+// ═══════════════════════════════════════════
+function initLocation() {
+  if (!('geolocation' in navigator)) {
+    setLocStatus('N/A', false);
+    document.getElementById('loc-val').textContent = 'N/A';
+    return;
+  }
+  document.getElementById('p-loc').textContent = '...';
+  document.getElementById('loc-val').textContent = 'Getting...';
+  navigator.geolocation.getCurrentPosition(pos => {
+    handlePos(pos);
+    setLocStatus('ACTIVE', true);
+    navigator.geolocation.watchPosition(handlePos, null, {enableHighAccuracy:false, maximumAge:60000, timeout:20000});
+  }, () => {
+    setLocStatus('DENIED', false);
+    document.getElementById('loc-val').textContent = 'Denied';
+    document.getElementById('loc-sub').textContent = 'Enable in browser';
+    toast('Location denied — allow in browser address bar');
+  });
+}
+function setLocStatus(t, ok) {
+  const el = document.getElementById('p-loc');
+  el.textContent = t;
+  el.className = ok ? 'badge-ok' : 'badge-no';
+}
+function handlePos(pos) {
+  const lat = pos.coords.latitude, lng = pos.coords.longitude;
+  const acc = Math.round(pos.coords.accuracy);
+  S.location = {lat: lat.toFixed(5), lng: lng.toFixed(5)};
+  document.getElementById('loc-sub').textContent = `±${acc}m`;
+
+  fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`)
+    .then(r => r.json())
+    .then(d => {
+      const area = d.address?.suburb || d.address?.neighbourhood || d.address?.quarter || d.address?.city_district || d.address?.city || d.address?.town || 'Unknown';
+      const city = d.address?.city || d.address?.town || d.address?.state || '';
+      S.locationName = area + (city && city !== area ? ', ' + city : '');
+      document.getElementById('loc-val').textContent = area.slice(0,8);
+      document.getElementById('loc-sub').textContent = S.locationName;
+      const day = getDay();
+      const last = day.locs.slice(-1)[0];
+      if (!last || last.name !== S.locationName) {
+        day.locs.push({ts:Date.now(), lat: lat.toFixed(5), lng: lng.toFixed(5), name: S.locationName, acc});
+        saveDay(day);
+        logEv('location','📍 '+area, S.locationName + ' (±'+acc+'m)', '📍', '#E8F5E9');
+      }
+    })
+    .catch(() => {
+      S.locationName = lat.toFixed(4) + '°N, ' + lng.toFixed(4) + '°E';
+      document.getElementById('loc-val').textContent = 'Located';
+      document.getElementById('loc-sub').textContent = S.locationName;
+    });
+}
+
+// ═══════════════════════════════════════════
+//  NETWORK (real)
+// ═══════════════════════════════════════════
+function updateNet() {
+  const on = navigator.onLine;
+  const c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  const type = c ? (c.effectiveType || c.type || 'unknown') : (on ? 'online' : 'offline');
+  const dl = c?.downlink ? c.downlink + ' Mbps' : '';
+  const rtt = c?.rtt ? c.rtt + 'ms' : '';
+  document.getElementById('net-icon').textContent = on ? '📶' : '📵';
+  document.getElementById('net-big').textContent = on ? '📶' : '📵';
+  document.getElementById('net-type').textContent = type.toUpperCase();
+  document.getElementById('net-detail').textContent = [dl, rtt].filter(Boolean).join(' · ') || (on ? 'Connected' : 'No internet');
+  document.getElementById('net-badge').innerHTML = on
+    ? '<span style="font-size:11px;font-weight:700;color:var(--scoreHigh);">● ONLINE</span>'
+    : '<span style="font-size:11px;font-weight:700;color:var(--scoreLow);">● OFFLINE</span>';
+  if (S.online !== on) {
+    S.online = on;
+    logEv('network', on ? 'Back Online' : 'Went Offline', type, on ? '📶' : '📵', on ? '#E8F5E9' : '#FCE4EC');
+  }
+}
+window.addEventListener('online', updateNet);
+window.addEventListener('offline', updateNet);
+if (navigator.connection) navigator.connection.addEventListener('change', updateNet);
+updateNet();
+
+// ═══════════════════════════════════════════
+//  TAB VISIBILITY (real focus tracking)
+// ═══════════════════════════════════════════
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    S.focusSec += (Date.now() - S.focusStart) / 1000;
+    logEv('focus','Left LifeLens','Tab went background','🌑','#E8EAF6');
+  } else {
+    S.focusStart = Date.now();
+    S.pickups++;
+    const day = getDay();
+    day.pickups = (day.pickups || 0) + 1;
+    saveDay(day);
+    logEv('focus','Returned to LifeLens','Tab refocused · pickup #' + day.pickups,'🌅','#FFF9C4');
+    updateHome();
+  }
 });
 
-// AI Regenerate
-const summaries = [
-  "Your morning was focused — 2.3 hours of deep work before 10am with no distractions. You spent 47 minutes on Instagram after lunch (your usual afternoon dip). The afternoon walk at 4pm brought a nice 2,200-step boost. Overall a solid day, slightly above your weekly average.",
-  "Strong start to the day: 2h+ in VS Code with zero social media interruptions until 10:30am. Post-lunch scroll habit kicked in again — 34 minutes on Instagram. You walked 2,240 steps in the evening which is great. Screen time of 4h 32m is within your goal.",
-  "Productive morning shielded from distractions. The daily 1pm Instagram habit appeared again — consider setting an app timer. Your evening walk is becoming consistent (4th day this week). Late-night Netflix until 22:00 may affect tomorrow's morning focus.",
-];
-let summaryIdx = 0;
+// ═══════════════════════════════════════════
+//  STEP COUNTER (real accelerometer)
+// ═══════════════════════════════════════════
+function initMotion() {
+  const req = () => {
+    let lastPeak = 0, steps = 0;
+    const THRESH = 11, MIN_GAP = 350;
+    window.addEventListener('devicemotion', e => {
+      const a = e.accelerationIncludingGravity;
+      if (!a) return;
+      const mag = Math.sqrt(a.x**2 + a.y**2 + a.z**2);
+      const now = Date.now();
+      if (mag > THRESH && now - lastPeak > MIN_GAP) {
+        steps++;
+        lastPeak = now;
+        S.steps = steps;
+        const day = getDay(); day.steps = steps; saveDay(day);
+        if (steps % 100 === 0) logEv('focus','👣 '+steps+' steps','Milestone reached!','👣','#FFF3E0');
+      }
+    });
+    document.getElementById('p-motion').textContent = 'ACTIVE';
+    document.getElementById('p-motion').className = 'badge-ok';
+    toast('Accelerometer active — walk to count steps!');
+  };
 
-function regenerateSummary() {
-  const btn = document.querySelector('.ai-generate-btn');
-  const text = document.getElementById('ai-text');
-  btn.textContent = '✦ Analyzing...';
-  btn.disabled = true;
-  text.innerHTML = '<div class="typing"><span></span><span></span><span></span></div>';
-  setTimeout(() => {
-    summaryIdx = (summaryIdx + 1) % summaries.length;
-    text.textContent = summaries[summaryIdx];
-    btn.textContent = '✦ Regenerate with Claude AI';
-    btn.disabled = false;
-  }, 1800);
+  if (typeof DeviceMotionEvent?.requestPermission === 'function') {
+    DeviceMotionEvent.requestPermission().then(p => {
+      if (p === 'granted') req();
+      else { document.getElementById('p-motion').textContent = 'DENIED'; document.getElementById('p-motion').className = 'badge-no'; }
+    });
+  } else if ('DeviceMotionEvent' in window) {
+    req();
+  } else {
+    document.getElementById('p-motion').textContent = 'N/A';
+    document.getElementById('p-motion').className = 'badge-no';
+    toast('Step counting needs a mobile device');
+  }
 }
 
-const weeklyReports = [
-  "This week you averaged 4h 12m of screen time daily — 18% above your personal baseline. Your most productive day was Wednesday with 3.8 hours of focused work. Thursday was your worst day for digital wellbeing: 6h 48m screen time, mostly passive content.\n\n<strong style='color:var(--primary)'>Recommendation:</strong> Try a hard stop at 10pm for screens. Your sleep quality correlates strongly with your morning productivity scores.",
-  "Week 2 summary: You improved your morning routine — 5 out of 7 days you started focused work before 8:30am. Steps are up 12% from last week (avg 7,100/day). Social media use dropped slightly but is still your #1 distraction category at 52 min/day.",
-];
-let weeklyIdx = 0;
+// ═══════════════════════════════════════════
+//  SCORES (computed in real-time)
+// ═══════════════════════════════════════════
+function computeScores() {
+  const h = new Date().getHours(), m = new Date().getMinutes();
+  const day = getDay();
+  const focusSec = S.focusSec + (Date.now() - S.focusStart) / 1000;
+  const focusMin = focusSec / 60;
+  const pickups = day.pickups || 0;
+  const battPct = S.battery ? Math.round(S.battery.level * 100) : 75;
+  const charging = S.battery?.charging || false;
 
-function regenerateWeekly() {
-  const btn = document.querySelector('.weekly-ai-btn');
-  const text = document.getElementById('weekly-text');
-  btn.textContent = '✦ Generating...';
-  btn.disabled = true;
-  text.innerHTML = '<div class="typing" style="justify-content:center"><span></span><span></span><span></span></div>';
-  setTimeout(() => {
-    weeklyIdx = (weeklyIdx + 1) % weeklyReports.length;
-    text.innerHTML = weeklyReports[weeklyIdx];
-    btn.textContent = '✦ Generate New Report';
-    btn.disabled = false;
-  }, 2200);
+  // Productivity score — time of day + focus time + pickups penalty
+  let prod = 45;
+  if (h >= 6  && h < 9)  prod += 25;   // early morning peak
+  if (h >= 9  && h < 12) prod += 20;
+  if (h >= 12 && h < 14) prod += 5;    // post-lunch dip
+  if (h >= 14 && h < 18) prod += 15;
+  if (h >= 20) prod -= 15;             // evening wind-down
+  prod += Math.min(focusMin * 0.8, 25); // focus time bonus, capped
+  prod -= Math.min(pickups * 1.5, 20);  // interruption penalty
+  prod = clamp(Math.round(prod), 5, 99);
+
+  // Wellbeing score — battery, time, hydration proxy (breaks)
+  let well = 55;
+  well += battPct > 50 ? 10 : battPct < 20 ? -20 : -5;
+  well += charging ? 5 : 0;
+  if (h >= 7 && h < 22) well += 10;    // normal hours
+  well -= Math.min(focusMin * 0.3, 20); // long sessions hurt
+  well += Math.min(pickups * 1.5, 15);  // breaks help wellbeing
+  if (h >= 22 || h < 6) well -= 20;    // late night
+  well = clamp(Math.round(well), 5, 99);
+
+  const pe = document.getElementById('prod-score');
+  const we = document.getElementById('well-score');
+  pe.textContent = prod;
+  pe.className = 'score-number ' + scoreClass(prod);
+  document.getElementById('prod-sub').textContent = prod >= 70 ? 'Above avg ↑' : prod >= 45 ? 'Average →' : 'Below avg ↓';
+  we.textContent = well;
+  we.className = 'score-number ' + scoreClass(well);
+  document.getElementById('well-sub').textContent = well >= 70 ? 'Feeling good' : well >= 45 ? 'Needs focus' : 'Take a break!';
+}
+function scoreClass(n) { return n >= 70 ? 'high' : n >= 45 ? 'mid' : 'low'; }
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+// ═══════════════════════════════════════════
+//  HOME STATS
+// ═══════════════════════════════════════════
+function updateHome() {
+  const day = getDay();
+  const focusSec = S.focusSec + (Date.now() - S.focusStart) / 1000;
+  const totalSec = (day.stSec || 0) + focusSec;
+  const min = Math.floor(totalSec / 60), hr = Math.floor(min / 60), rem = min % 60;
+  document.getElementById('st-val').textContent = hr > 0 ? hr + 'h ' + rem + 'm' : min + 'm';
+  document.getElementById('st-sub').textContent = 'Session: ' + Math.round(focusSec / 60) + 'm active';
+  document.getElementById('pu-val').textContent = day.pickups || 0;
+  computeScores();
 }
 
+// ═══════════════════════════════════════════
+//  CLAUDE API CALLS (real)
+// ═══════════════════════════════════════════
+async function claude(system, user, maxTok = 280) {
+  const k = getKey();
+  if (!k) { toast('No API key! Go to Settings.'); return null; }
+  const r = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': k,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: maxTok,
+      system,
+      messages: [{ role: 'user', content: user }]
+    })
+  });
+  if (!r.ok) {
+    const e = await r.json().catch(() => ({}));
+    throw new Error(e.error?.message || 'HTTP ' + r.status);
+  }
+  return (await r.json()).content?.[0]?.text || '';
+}
+
+function buildCtx() {
+  const day = getDay();
+  const h = new Date().getHours();
+  const focusSec = S.focusSec + (Date.now() - S.focusStart) / 1000;
+  const focusMin = Math.round(focusSec / 60);
+  const totalMin = Math.round(((day.stSec || 0) + focusSec) / 60);
+  const batt = S.battery ? Math.round(S.battery.level * 100) + '% ' + (S.battery.charging ? '(charging)' : '(discharging)') : 'unknown';
+  const loc = S.locationName || (S.location ? S.location.lat + '°, ' + S.location.lng + '°' : 'unknown');
+  const conn = navigator.connection?.effectiveType || (navigator.onLine ? 'online' : 'offline');
+  const steps = day.steps || S.steps || 0;
+  const recent = day.events.slice(-12).map(e => `${e.time} [${e.type}] ${e.title}: ${e.sub}`).join('\n');
+  const ps = document.getElementById('prod-score').textContent;
+  const ws = document.getElementById('well-score').textContent;
+  return `Time: ${new Date().toLocaleTimeString()}, Hour: ${h}
+Productivity score: ${ps}/99, Wellbeing score: ${ws}/99
+Focus time this session: ${focusMin} min
+Total screen time today: ${totalMin} min
+Tab pickups/returns: ${day.pickups || 0}
+Battery: ${batt}
+Location: ${loc}
+Locations visited today: ${day.locs.length}
+Steps counted: ${steps}
+Network: ${conn}
+Recent events (latest first):
+${recent || 'Session just started'}`;
+}
+
+async function genSummary(auto = false) {
+  const btn = document.getElementById('ai-btn');
+  const txt = document.getElementById('ai-text');
+  const meta = document.getElementById('ai-meta');
+  btn.disabled = true;
+  btn.textContent = '✦ Claude is thinking...';
+  if (!auto) txt.innerHTML = '<div class="typing"><span></span><span></span><span></span></div>';
+  try {
+    const res = await claude(
+      'You are LifeLens, a personal life intelligence assistant. You receive real live data from the user\'s browser session — battery, location, focus time, tab behavior, time of day. Write a sharp 2-3 sentence insight about their current moment. Be specific with the actual numbers. Sound like a smart personal coach, not generic. Never say "I don\'t have enough data".',
+      'My live data right now:\n' + buildCtx() + '\n\nGive me a real-time personal insight.'
+    );
+    txt.textContent = res;
+    meta.textContent = '✦ Generated ' + new Date().toLocaleTimeString();
+    S.aiLastRun = Date.now();
+    logEv('ai', 'AI Insight Generated', res.slice(0, 60) + '...', '✦', '#F3E5F5');
+  } catch(e) {
+    txt.textContent = 'Claude error: ' + e.message;
+    meta.textContent = '';
+    if (e.message.includes('401')) {
+      txt.textContent = 'Invalid API key. Go to Settings and update it.';
+    }
+  }
+  btn.textContent = '✦ Refresh AI Insight';
+  btn.disabled = false;
+}
+
+async function genWeekly() {
+  const btn = document.getElementById('week-btn');
+  const txt = document.getElementById('week-text');
+  btn.disabled = true;
+  btn.textContent = '✦ Claude is analyzing...';
+  txt.innerHTML = '<div class="typing" style="justify-content:center"><span></span><span></span><span></span></div>';
+  try {
+    const store = loadStore();
+    const lines = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(); d.setDate(d.getDate() - i);
+      const k = dayKey(d); const data = store[k];
+      if (data) {
+        const min = Math.round((data.stSec || 0) / 60);
+        const locs = (data.locs || []).map(l => l.name).filter((v,i,a) => a.indexOf(v) === i);
+        lines.push(`${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()]} ${d.getDate()}: `
+          + `${min}min screen, ${data.pickups||0} tab returns, ${(data.events||[]).length} events, `
+          + `${data.steps||0} steps, locations: [${locs.join(', ')||'none'}]`);
+      }
+    }
+    const res = await claude(
+      'You are LifeLens weekly intelligence. Analyze real usage data across the week. Identify genuine behavioral patterns. Give 3-4 sentences with specific observations and one actionable recommendation. Be real, not generic.',
+      'My real week:\n' + (lines.join('\n') || 'Only today data available') + '\n\nWeekly insight.',
+      350
+    );
+    txt.innerHTML = res;
+  } catch(e) {
+    txt.textContent = 'Error: ' + e.message;
+  }
+  btn.textContent = '✦ Regenerate Report';
+  btn.disabled = false;
+}
+
+// ═══════════════════════════════════════════
+//  TIMELINE
+// ═══════════════════════════════════════════
+let tlFilter = 'all', tlDay = dayKey();
+function renderTimeline() {
+  buildDaySel();
+  const store = loadStore();
+  const data = store[tlDay];
+  const list = document.getElementById('tl-list');
+  if (!data || !data.events?.length) {
+    list.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--textMuted);font-size:13px;">No events logged for this day yet.</div>';
+    document.getElementById('ev-count').textContent = '0 events';
+    return;
+  }
+  const evs = data.events.filter(e => tlFilter === 'all' || e.type === tlFilter).slice().reverse();
+  document.getElementById('ev-count').textContent = evs.length + ' events';
+  list.innerHTML = evs.map((ev, i) => `
+    <div class="tl-item">
+      <div class="tl-tcol"><div class="tl-t">${ev.time}</div></div>
+      <div class="tl-lcol">
+        <div class="tl-dot" style="background:${ev.bg}">${ev.icon}</div>
+        ${i < evs.length-1 ? '<div class="tl-line"></div>' : ''}
+      </div>
+      <div style="flex:1;padding-top:8px;">
+        <div class="tl-card${i===0?' latest':''}">
+          <div class="tl-title">${ev.title}</div>
+          <div class="tl-sub">${ev.sub}</div>
+          ${i===0 ? '<div class="tl-dur">● NOW</div>' : ''}
+        </div>
+      </div>
+    </div>`).join('');
+}
+function buildDaySel() {
+  const store = loadStore();
+  const keys = Object.keys(store).filter(k => store[k]?.events?.length).sort().reverse().slice(0,7);
+  const sel = document.getElementById('day-sel');
+  if (!keys.length) { sel.innerHTML = '<div class="day-chip on">Today</div>'; return; }
+  sel.innerHTML = keys.map(k => {
+    const d = new Date(k), isT = k === dayKey();
+    const lbl = isT ? 'Today' : DAYS[d.getDay()].slice(0,3) + ' ' + d.getDate();
+    return `<div class="day-chip${k===tlDay?' on':''}" onclick="tlDay='${k}';renderTimeline()">${lbl}</div>`;
+  }).join('');
+}
+function setFilter(f, el) {
+  tlFilter = f;
+  document.querySelectorAll('.fchip').forEach(c => c.classList.remove('on'));
+  el.classList.add('on');
+  renderTimeline();
+}
+
+// ═══════════════════════════════════════════
+//  INSIGHTS
+// ═══════════════════════════════════════════
+function renderInsights() {
+  const store = loadStore();
+  const week = Array.from({length:7}, (_,i) => {
+    const d = new Date(); d.setDate(d.getDate() - (6-i));
+    const k = dayKey(d), data = store[k];
+    return { lbl: ['S','M','T','W','T','F','S'][d.getDay()], k, data };
+  });
+
+  // Screen time chart
+  const stVals = week.map(d => d.data ? Math.round((d.data.stSec||0)/60) : 0);
+  const maxSt = Math.max(...stVals, 1);
+  document.getElementById('chart-st').innerHTML = week.map((d,i) => {
+    const pct = Math.round(stVals[i]/maxSt*100);
+    const isT = d.k === dayKey();
+    return `<div class="bar-w"><div class="bar-o"><div class="bar-i" style="height:${pct}%;background:${isT?'var(--tertiary)':'var(--primary)'}"></div></div><div class="bar-l">${d.lbl}</div></div>`;
+  }).join('');
+  const avgSt = Math.round(stVals.reduce((a,b)=>a+b,0)/7);
+  document.getElementById('chart-st-lbl').textContent = `Avg: ${avgSt}min/day · Today: ${stVals[6]}min`;
+
+  // Pickups chart
+  const puVals = week.map(d => d.data ? (d.data.pickups||0) : 0);
+  const maxPu = Math.max(...puVals, 1);
+  document.getElementById('chart-pu').innerHTML = week.map((d,i) => {
+    const pct = Math.round(puVals[i]/maxPu*100);
+    return `<div class="bar-w"><div class="bar-o"><div class="bar-i" style="height:${pct}%;background:var(--secondary)"></div></div><div class="bar-l">${d.lbl}</div></div>`;
+  }).join('');
+  const avgPu = (puVals.reduce((a,b)=>a+b,0)/7).toFixed(1);
+  document.getElementById('chart-pu-lbl').textContent = `Avg: ${avgPu}/day · Week total: ${puVals.reduce((a,b)=>a+b,0)}`;
+
+  // Patterns
+  const pats = [];
+  const totalEvs = week.reduce((a,d) => a+(d.data?.events?.length||0), 0);
+  const today = getDay();
+  if (totalEvs < 5) {
+    document.getElementById('pat-list').innerHTML = '<div style="text-align:center;padding:24px;color:var(--textMuted);font-size:13px;">Use the app across multiple days — real patterns will emerge here automatically.</div>';
+  } else {
+    const activeDays = week.filter(d => (d.data?.stSec||0) > 60).length;
+    if (activeDays >= 5) pats.push({icon:'🔥',name:'Consistent User',desc:`Active ${activeDays} of last 7 days`,badge:activeDays+'/7'});
+    if (stVals[6] > avgSt * 1.3) pats.push({icon:'📈',name:'High Usage Today',desc:`${Math.round(((stVals[6]-avgSt)/avgSt)*100)}% above your weekly average`,badge:'Above avg'});
+    const locs = (today.locs||[]).filter((v,i,a) => a.findIndex(l=>l.name===v.name)===i);
+    if (locs.length > 1) pats.push({icon:'📍',name:locs.length+' Places Today',desc:locs.map(l=>l.name).join(' → '),badge:locs.length+' stops'});
+    const battEvs = week.flatMap(d => d.data?.batt||[]);
+    if (battEvs.length > 3) {
+      const avg = Math.round(battEvs.reduce((a,b)=>a+b.pct,0)/battEvs.length);
+      if (avg < 35) pats.push({icon:'🪫',name:'Low Battery Pattern',desc:'Your battery frequently drops below 35%',badge:'Avg '+avg+'%'});
+    }
+    if (pats.length === 0) pats.push({icon:'⏳',name:'Collecting Data',desc:'More days needed to detect behavioral patterns',badge:'Building...'});
+    document.getElementById('pat-list').innerHTML = pats.map(p =>
+      `<div class="pat-row"><div class="pat-icon">${p.icon}</div><div class="pat-info"><div class="pat-name">${p.name}</div><div class="pat-desc">${p.desc}</div></div><div class="pat-badge">${p.badge}</div></div>`
+    ).join('');
+  }
+}
+
+// ═══════════════════════════════════════════
+//  SETTINGS
+// ═══════════════════════════════════════════
 function saveKey() {
-  const val = document.getElementById('api-key-input').value;
-  if (!val) { alert('Please enter your API key'); return; }
-  alert('API key saved! ✓');
+  const v = document.getElementById('api-inp').value.trim();
+  if (!v) { toast('Enter an API key first'); return; }
+  if (!v.startsWith('sk-ant-')) { toast('Invalid key — must start with sk-ant-'); return; }
+  localStorage.setItem('ll_key', v);
+  document.getElementById('key-status').textContent = '✓ Key saved';
+  document.getElementById('api-inp').value = '';
+  toast('API key updated ✓');
 }
+function refreshSettings() {
+  const k = getKey();
+  document.getElementById('api-inp').placeholder = k ? 'Key active — paste new to replace' : 'sk-ant-...';
+  document.getElementById('key-status').textContent = k ? '✓ API key active ('+k.slice(0,12)+'...)' : 'No key saved';
+  let sz = 0;
+  for (const k in localStorage) if (localStorage.hasOwnProperty(k)) sz += (localStorage[k].length + k.length) * 2;
+  document.getElementById('storage-sz').textContent = (sz/1024).toFixed(1) + ' KB used';
+  const store = loadStore();
+  const total = Object.values(store).reduce((a,d)=>a+(d.events?.length||0), 0);
+  document.getElementById('total-ev').textContent = total + ' events across all days';
+}
+function exportData() {
+  const blob = new Blob([JSON.stringify(loadStore(), null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'lifelens_' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  toast('Data exported ✓');
+}
+function clearData() {
+  localStorage.removeItem(STORE);
+  toast('All data cleared');
+  updateHome();
+}
+
+// ═══════════════════════════════════════════
+//  NAV
+// ═══════════════════════════════════════════
+function goTo(name, el) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nitem').forEach(n => n.classList.remove('on'));
+  document.getElementById('s-' + name).classList.add('active');
+  el.classList.add('on');
+}
+function switchTab(el, name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+  document.querySelectorAll('.tabp').forEach(t => t.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('tab-' + name).classList.add('on');
+}
+
+// ═══════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ═══════════════════════════════════════════
+//  PERSIST ON UNLOAD
+// ═══════════════════════════════════════════
+window.addEventListener('beforeunload', () => {
+  const day = getDay();
+  day.stSec = (day.stSec || 0) + S.focusSec + (Date.now() - S.focusStart) / 1000;
+  saveDay(day);
+});
+
+// ═══════════════════════════════════════════
+//  AUTO-REFRESH LOOP (every 5s)
+// ═══════════════════════════════════════════
+setInterval(() => {
+  updateHome();
+  updateNet();
+  // Persist screen time
+  const day = getDay();
+  day.stSec = (day.stSec || 0) + S.focusSec + (Date.now() - S.focusStart) / 1000;
+  S.focusSec = 0;
+  S.focusStart = Date.now();
+  saveDay(day);
+}, 5000);
+
+// AI auto-refresh every 8 minutes
+setInterval(() => {
+  if (Date.now() - S.aiLastRun > 8 * 60 * 1000 && !document.hidden) {
+    genSummary(true);
+  }
+}, 60000);
+
+// ═══════════════════════════════════════════
+//  BOOT SEQUENCE
+// ═══════════════════════════════════════════
+(async function boot() {
+  logEv('session', 'LifeLens Started', new Date().toLocaleTimeString(), '🚀', '#E8F5E9');
+  initBattery();
+  initLocation();   // Auto-request GPS on load
+  updateHome();
+  refreshSettings();
+
+  // Kick off real AI summary immediately
+  setTimeout(() => genSummary(true), 1500);
+
+  // Auto-generate weekly on insights tab open
+  document.querySelector('[onclick*="genWeekly"]')?.addEventListener?.('click', () => {});
+  setTimeout(() => {
+    if (document.getElementById('tab-weekly').classList.contains('on')) genWeekly();
+  }, 2000);
+
+  console.log('%c⚡ LifeLens LIVE', 'color:#C5F135;font-size:18px;font-weight:900;background:#12122A;padding:8px 16px;border-radius:8px;');
+  console.log('%cAll data is REAL. Inspect with: JSON.parse(localStorage.getItem("ll3"))', 'color:#B4AEFF;font-size:13px;');
+})();
 </script>
 </body>
 </html>

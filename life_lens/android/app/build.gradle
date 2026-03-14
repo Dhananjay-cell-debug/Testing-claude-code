@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace "com.lifelens.app"
+    namespace "com.dhananjay.lifelens"
     compileSdk = 34
     ndkVersion = flutter.ndkVersion
 
@@ -20,7 +20,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.lifelens.app"
+        applicationId "com.dhananjay.lifelens"
         minSdk 23  // Android 6.0+ for UsageStats API
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
@@ -35,7 +35,6 @@ android {
             proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
         }
         debug {
-            applicationIdSuffix ".debug"
             debuggable true
         }
     }
