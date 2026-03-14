@@ -102,7 +102,9 @@ jobs:
 
       - name: Build debug APK
         working-directory: life_lens
-        run: flutter build apk --debug --build-name=1.0.${{ github.run_number }} --build-number=${{ github.run_number }}
+        env:
+          CLAUDE_API_KEY: ${{ secrets.CLAUDE_API_KEY }}
+        run: flutter build apk --debug --build-name=1.0.${{ github.run_number }} --build-number=${{ github.run_number }} --dart-define=CLAUDE_API_KEY=${{ secrets.CLAUDE_API_KEY }}
 
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4

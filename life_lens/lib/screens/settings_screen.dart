@@ -39,6 +39,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
+    // Set defaults on first launch
+    if (!prefs.containsKey('user_name')) {
+      await prefs.setString('user_name', 'Dhananjay Chitmilla');
+    }
+    // Auto-populate API key injected at build time via --dart-define=CLAUDE_API_KEY=...
+    const buildApiKey = String.fromEnvironment('CLAUDE_API_KEY', defaultValue: '');
+    if (!prefs.containsKey('claude_api_key') && buildApiKey.isNotEmpty) {
+      await prefs.setString('claude_api_key', buildApiKey);
+    }
     setState(() {
       _apiKeyController.text = prefs.getString('claude_api_key') ?? '';
       _trackLocation = prefs.getBool('track_location') ?? true;

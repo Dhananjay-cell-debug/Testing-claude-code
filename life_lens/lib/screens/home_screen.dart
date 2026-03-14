@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -31,6 +32,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   bool _isGeneratingSummary = false;
   int _selectedNav = 0;
 
+  String _userName = 'Dhananjay Chitmilla';
+  DateTime _now = DateTime.now();
+  Timer? _clockTimer;
+
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
 
@@ -41,6 +46,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.dark,
     ));
+    // Live clock — updates every minute
+    _clockTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (mounted) setState(() => _now = DateTime.now());
+    });
+
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
@@ -53,6 +63,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   @override
   void dispose() {
+    _clockTimer?.cancel();
     _pulseController.dispose();
     super.dispose();
   }
@@ -60,6 +71,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   Future<void> _loadData() async {
     final prefs = await SharedPreferences.getInstance();
     final today = DateTime.now();
+    final savedName = prefs.getString('user_name');
+    if (savedName != null && savedName.isNotEmpty && mounted) {
+      setState(() => _userName = savedName);
+    }
     final stats = await _db.getDayStats(today);
     final appUsage = await _db.getAppUsageForDay(today);
     final summary = await _db.getDailySummary(today);
@@ -116,7 +131,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildDashboard() {
-    final now = DateTime.now();
+    final now = _now;
     final greeting = _getGreeting(now.hour);
     final screenTimeHours = (_screenTimeMinutes / 60).toStringAsFixed(1);
 
@@ -232,7 +247,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ),
             child: Center(
               child: Text(
-                'LL',
+                _userName.trim().split(' ').where((w) => w.isNotEmpty).take(2)
+                    .map((w) => w[0].toUpperCase()).join(),
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w800,
@@ -258,7 +274,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ),
                 const SizedBox(height: 1),
                 Text(
-                  DateFormat('EEEE, MMM d').format(now),
+                  _userName.split(' ').first,
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w800,
@@ -268,6 +284,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ],
             ),
           ),
+          Text(
+            DateFormat('h:mm a').format(now),
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w800,
+              color: AppColors.textPrimary,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+          const SizedBox(width: 8),
           ScaleTransition(
             scale: _pulseAnimation,
             child: Container(
@@ -910,7 +936,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     if (hour < 5) return 'Good Night';
     if (hour < 12) return 'Good Morning';
     if (hour < 17) return 'Good Afternoon';
-    if (hour < 21) return 'Good Evening';
+    if (hour < 22) return 'Good Evening';
     return 'Good Night';
   }
 }
