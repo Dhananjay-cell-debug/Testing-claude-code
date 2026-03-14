@@ -8,7 +8,7 @@ import '../services/location_service.dart';
 
 class ClaudeService {
   static const _baseUrl = 'https://api.anthropic.com/v1/messages';
-  static const _model = 'claude-haiku-4-5-20251001';
+  static const _model = 'claude-sonnet-4-6';
 
   final _db = DatabaseHelper();
   final _usageService = UsageStatsService();
