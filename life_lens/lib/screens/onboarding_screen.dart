@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/constants.dart';
@@ -15,6 +16,11 @@ class OnboardingScreen extends StatefulWidget {
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final _pageController = PageController();
   int _currentPage = 0;
+  bool _usageGranted = false;
+  static const _nativeChannel = MethodChannel('com.dhananjay.lifelens/native');
+
+  // Page 4 (index 4) is the Usage Access page
+  static const int _usagePageIndex = 4;
 
   final _pages = [
     _OnboardingPage(
@@ -41,7 +47,29 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       subtitle: 'Claude AI analyzes all your data and gives you a brutally honest, deeply personal daily brief.',
       color: AppColors.tertiary,
     ),
+    _OnboardingPage(
+      emoji: '📊',
+      title: 'One Critical Permission',
+      subtitle: 'Usage Access lets LifeLens see which apps you use and for how long. Without it, screen time stays zero.',
+      color: const Color(0xFFFF6B35),
+    ),
   ];
+
+  Future<void> _checkUsageAccess() async {
+    try {
+      final granted = await _nativeChannel.invokeMethod<bool>('hasUsageAccessPermission') ?? false;
+      if (mounted) setState(() => _usageGranted = granted);
+    } catch (_) {}
+  }
+
+  Future<void> _openUsageAccess() async {
+    try {
+      await _nativeChannel.invokeMethod('openUsageAccessSettings');
+      // Wait a moment then re-check
+      await Future.delayed(const Duration(seconds: 2));
+      await _checkUsageAccess();
+    } catch (_) {}
+  }
 
   Future<void> _requestPermissions() async {
     await [
@@ -59,7 +87,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _checkUsageAccess();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final isLastPage = _currentPage == _pages.length - 1;
+    final isUsagePage = _currentPage == _usagePageIndex;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Column(
@@ -67,7 +104,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           Expanded(
             child: PageView.builder(
               controller: _pageController,
-              onPageChanged: (i) => setState(() => _currentPage = i),
+              onPageChanged: (i) {
+                setState(() => _currentPage = i);
+                if (i == _usagePageIndex) _checkUsageAccess();
+              },
               itemCount: _pages.length,
               itemBuilder: (context, index) => _pages[index],
             ),
@@ -93,11 +133,62 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   }),
                 ),
                 const SizedBox(height: AppSizes.gapL),
+
+                // Usage Access grant button (only on usage page and not yet granted)
+                if (isUsagePage && !_usageGranted) ...[
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: _openUsageAccess,
+                      icon: const Icon(Icons.lock_open_rounded, size: 18),
+                      label: const Text(
+                        'Grant Usage Access',
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFFF6B35),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                ],
+
+                if (isUsagePage && _usageGranted) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: AppColors.scoreHigh.withAlpha(30),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.check_circle_rounded, color: AppColors.scoreHigh, size: 18),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Usage Access granted!',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.scoreHigh,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                ],
+
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () {
-                      if (_currentPage < _pages.length - 1) {
+                      if (!isLastPage) {
                         _pageController.nextPage(
                           duration: const Duration(milliseconds: 400),
                           curve: Curves.easeInOut,
@@ -115,7 +206,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                     ),
                     child: Text(
-                      _currentPage < _pages.length - 1 ? 'Continue' : 'Start Tracking My Life →',
+                      isLastPage
+                          ? 'Start Tracking My Life →'
+                          : isUsagePage && !_usageGranted
+                              ? 'Skip for Now'
+                              : 'Continue',
                       style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                     ),
                   ),

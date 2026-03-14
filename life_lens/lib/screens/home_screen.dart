@@ -35,6 +35,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   String _userName = 'Dhananjay Chitmilla';
   DateTime _now = DateTime.now();
   Timer? _clockTimer;
+  Timer? _refreshTimer;
+  bool _hasUsageAccess = true;
+
+  static const _nativeChannel = MethodChannel('com.dhananjay.lifelens/native');
 
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
@@ -46,9 +50,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.dark,
     ));
-    // Live clock — updates every minute
+    // Live clock — updates every 30 seconds
     _clockTimer = Timer.periodic(const Duration(seconds: 30), (_) {
       if (mounted) setState(() => _now = DateTime.now());
+    });
+
+    // Auto-refresh data every 30 seconds
+    _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (mounted) _loadData();
     });
 
     _pulseController = AnimationController(
@@ -64,6 +73,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   @override
   void dispose() {
     _clockTimer?.cancel();
+    _refreshTimer?.cancel();
     _pulseController.dispose();
     super.dispose();
   }
@@ -75,17 +85,31 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     if (savedName != null && savedName.isNotEmpty && mounted) {
       setState(() => _userName = savedName);
     }
+
+    // Check UsageAccess permission (special Android permission)
+    bool hasUsage = true;
+    try {
+      hasUsage = await _nativeChannel.invokeMethod<bool>('hasUsageAccessPermission') ?? false;
+    } catch (_) {}
+
     final stats = await _db.getDayStats(today);
     final appUsage = await _db.getAppUsageForDay(today);
     final summary = await _db.getDailySummary(today);
     if (!mounted) return;
     setState(() {
+      _hasUsageAccess = hasUsage;
       _todaySteps = prefs.getInt('today_steps') ?? (stats['total_steps'] as int);
       _screenTimeMinutes = stats['total_screen_time_minutes'] as int;
       _phonePickups = prefs.getInt('today_pickups') ?? (stats['phone_pickups'] as int);
       _appUsage = appUsage;
       _todaySummary = summary;
     });
+  }
+
+  Future<void> _openUsageAccessSettings() async {
+    try {
+      await _nativeChannel.invokeMethod('openUsageAccessSettings');
+    } catch (_) {}
   }
 
   Future<void> _generateSummary() async {
@@ -142,6 +166,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       child: CustomScrollView(
         slivers: [
           SliverToBoxAdapter(child: _buildHeader(greeting, now)),
+          if (!_hasUsageAccess)
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(AppSizes.padding, 0, AppSizes.padding, 0),
+              sliver: SliverToBoxAdapter(child: _buildUsagePermissionBanner()),
+            ),
           const SliverToBoxAdapter(child: SizedBox(height: AppSizes.gapM)),
           SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: AppSizes.padding),
@@ -223,6 +252,67 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ),
           const SliverToBoxAdapter(child: SizedBox(height: 100)),
         ],
+      ),
+    );
+  }
+
+  Widget _buildUsagePermissionBanner() {
+    return GestureDetector(
+      onTap: _openUsageAccessSettings,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFF6B35).withAlpha(20),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFFFF6B35).withAlpha(80)),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.lock_open_rounded, color: Color(0xFFFF6B35), size: 22),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Enable Usage Access',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFFFF6B35),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Screen time data needs Usage Access permission. Tap to enable.',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: const Color(0xFFFF6B35).withAlpha(180),
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFF6B35),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Text(
+                'Fix Now',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -24,17 +24,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
   int _todaySteps = 0;
   int _screenMins = 0;
   bool _darkMode = false;
+  bool _hasUsageAccess = false;
+
+  static const _nativeChannel = MethodChannel('com.dhananjay.lifelens/native');
 
   @override
   void initState() {
     super.initState();
     _loadSettings();
+    _checkUsageAccess();
   }
 
   @override
   void dispose() {
     _apiKeyController.dispose();
     super.dispose();
+  }
+
+  Future<void> _checkUsageAccess() async {
+    try {
+      final granted = await _nativeChannel.invokeMethod<bool>('hasUsageAccessPermission') ?? false;
+      if (mounted) setState(() => _hasUsageAccess = granted);
+    } catch (_) {}
+  }
+
+  Future<void> _openUsageAccessSettings() async {
+    try {
+      await _nativeChannel.invokeMethod('openUsageAccessSettings');
+      await Future.delayed(const Duration(seconds: 2));
+      await _checkUsageAccess();
+    } catch (_) {}
   }
 
   Future<void> _loadSettings() async {
@@ -252,10 +271,73 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return _Section(
       title: 'TRACKING',
       children: [
+        // Usage Access permission row
+        Container(
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+          decoration: BoxDecoration(
+            color: _hasUsageAccess
+                ? AppColors.scoreHigh.withAlpha(20)
+                : const Color(0xFFFF6B35).withAlpha(20),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: _hasUsageAccess
+                  ? AppColors.scoreHigh.withAlpha(80)
+                  : const Color(0xFFFF6B35).withAlpha(80),
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                _hasUsageAccess ? Icons.check_circle_rounded : Icons.lock_open_rounded,
+                color: _hasUsageAccess ? AppColors.scoreHigh : const Color(0xFFFF6B35),
+                size: 20,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Usage Access Permission',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: _hasUsageAccess ? AppColors.scoreHigh : const Color(0xFFFF6B35),
+                      ),
+                    ),
+                    Text(
+                      _hasUsageAccess ? 'Granted — screen time tracking active' : 'Not granted — screen time will show zero',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: (_hasUsageAccess ? AppColors.scoreHigh : const Color(0xFFFF6B35)).withAlpha(160),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (!_hasUsageAccess)
+                GestureDetector(
+                  onTap: _openUsageAccessSettings,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFF6B35),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Text(
+                      'Grant',
+                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Colors.white),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
         _ToggleRow(
           emoji: '📱',
           label: 'App Usage Tracking',
-          subtitle: 'Requires Usage Access permission in Android settings',
+          subtitle: 'Requires Usage Access permission above',
           value: _trackApps,
           onChanged: (v) => setState(() => _trackApps = v),
         ),
