@@ -8,13 +8,16 @@ import '../services/location_service.dart';
 
 class ClaudeService {
   static const _baseUrl = 'https://api.anthropic.com/v1/messages';
-  static const _model = 'claude-sonnet-4-6';
+  static const _model = 'claude-3-5-sonnet-20241022';
 
   final _db = DatabaseHelper();
   final _usageService = UsageStatsService();
   final _locationService = LifeLocationService();
 
   Future<String?> _getApiKey() async {
+    const envKey = String.fromEnvironment('CLAUDE_API_KEY');
+    if (envKey.isNotEmpty) return envKey;
+
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('claude_api_key');
   }

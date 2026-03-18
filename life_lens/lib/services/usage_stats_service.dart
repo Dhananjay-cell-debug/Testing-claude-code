@@ -1,7 +1,6 @@
 import 'package:app_usage/app_usage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../database/database_helper.dart';
-import '../models/life_event.dart';
 
 // Packages to filter out (system apps)
 const _systemPackages = {
@@ -42,46 +41,52 @@ const _appNames = {
 class UsageStatsService {
   final _db = DatabaseHelper();
 
-  /// Collect app usage for the last 5 minutes and save to DB
+  /// Collect app usage and save to DB.
+  /// Queries CUMULATIVE usage from midnight to now, so each call overwrites
+  /// the previous value — no duplicate rows, no inflated totals.
   Future<void> collectAndSave() async {
     try {
       final now = DateTime.now();
-      final fiveMinutesAgo = now.subtract(const Duration(minutes: 5));
+      final startOfDay = DateTime(now.year, now.month, now.day);
+      final dateKey = _db.dateKey(now);
 
-      final infos = await AppUsage().getAppUsage(fiveMinutesAgo, now);
+      // Full-day cumulative usage (midnight → now)
+      final dayInfos = await AppUsage().getAppUsage(startOfDay, now);
 
-      for (final info in infos) {
+      // Last-5-min window to detect phone activity (for pickup counting)
+      final fiveMinAgo = now.subtract(const Duration(minutes: 5));
+      final recentInfos = await AppUsage().getAppUsage(fiveMinAgo, now);
+      final activeNow = recentInfos
+          .where((i) => !_systemPackages.contains(i.packageName) && i.usage.inSeconds >= 5)
+          .isNotEmpty;
+
+      for (final info in dayInfos) {
         if (_systemPackages.contains(info.packageName)) continue;
         if (info.usage.inSeconds < 5) continue;
 
         final appName = _appNames[info.packageName] ?? _friendlyName(info.packageName);
 
-        await _db.insertAppSession(
+        // Upsert: overwrites today's row with latest cumulative total
+        await _db.upsertAppSession(
           packageName: info.packageName,
           appName: appName,
-          startTime: fiveMinutesAgo,
-          endTime: now,
-        );
-
-        await _db.insertEvent(LifeEvent(
-          type: 'app_usage',
-          timestamp: now,
+          dateKey: dateKey,
           durationSeconds: info.usage.inSeconds,
-          data: {
-            'package_name': info.packageName,
-            'app_name': appName,
-            'duration_seconds': info.usage.inSeconds.toString(),
-            'category': _categorize(info.packageName),
-          },
-        ));
+        );
       }
 
-      // Update shared prefs for notification
+      // Increment pickup count if phone was actively used in this 5-min window
+      if (activeNow) {
+        final currentPickups = await _db.getDailyPickups(dateKey);
+        await _db.saveDailyPickups(dateKey, currentPickups + 1);
+      }
+
+      // Update shared prefs for notification bar
       final screenMins = await _db.getTotalScreenTimeForDay(now);
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt('today_screen_minutes', screenMins);
     } catch (e) {
-      // UsageStats permission not granted yet - will retry
+      // UsageStats permission not granted yet - will retry next cycle
     }
   }
 

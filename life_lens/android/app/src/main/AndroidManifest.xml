@@ -48,6 +48,18 @@
     <!-- Call log (optional) -->
     <uses-permission android:name="android.permission.READ_CALL_LOG" />
 
+    <!-- Safety System: direct emergency calls without dialer popup -->
+    <uses-permission android:name="android.permission.CALL_PHONE" />
+
+    <!-- Safety System: SMS blast to trusted contacts (works offline) -->
+    <uses-permission android:name="android.permission.SEND_SMS" />
+
+    <!-- Safety System: silent audio recording during emergencies -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
+    <!-- Safety System: full-screen popup even on lock screen (like incoming call) -->
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+
     <application
         android:label="LifeLens"
         android:name="${applicationName}"

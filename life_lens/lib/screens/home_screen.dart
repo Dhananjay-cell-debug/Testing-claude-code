@@ -12,6 +12,10 @@ import 'timeline_screen.dart';
 import 'insights_screen.dart';
 import 'settings_screen.dart';
 import 'chat_screen.dart';
+import 'safety_mode_screen.dart';
+import 'safety_checkin_popup.dart';
+import '../services/safety_service.dart';
+import '../models/safety_incident.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -20,7 +24,8 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
+class _HomeScreenState extends State<HomeScreen>
+    with TickerProviderStateMixin, WidgetsBindingObserver {
   final _db = DatabaseHelper();
   final _claude = ClaudeService();
 
@@ -37,6 +42,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   Timer? _clockTimer;
   Timer? _refreshTimer;
   bool _hasUsageAccess = true;
+
+  final _safety = SafetyService();
+  StreamSubscription? _safetyEventSub;
 
   static const _nativeChannel = MethodChannel('com.dhananjay.lifelens/native');
 
@@ -68,12 +76,50 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
     _loadData();
+    WidgetsBinding.instance.addObserver(this);
+
+    // Listen for in-app safety events (app is open and foreground)
+    _safetyEventSub = _safety.events.listen((event) {
+      if (!mounted) return;
+      if (event.type == SafetyEventType.checkinRequired) {
+        SafetyCheckinPopup.show(context, currentLevel: event.level ?? ThreatLevel.uncomfortable);
+      }
+    });
+
+    // Check for checkin fired by background service while app was closed/locked
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkPendingSafetyCheckin());
+  }
+
+  /// Called when app resumes from background — catches notifications tapped
+  /// while app was backgrounded or screen was locked.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkPendingSafetyCheckin();
+    }
+  }
+
+  /// Background service sets safety_checkin_pending=true before firing the
+  /// full-screen notification. We read it here and show the popup immediately.
+  Future<void> _checkPendingSafetyCheckin() async {
+    final prefs = await SharedPreferences.getInstance();
+    final pending = prefs.getBool('safety_checkin_pending') ?? false;
+    if (!pending || !mounted) return;
+    // Clear before showing so it doesn't re-trigger on next resume
+    await prefs.setBool('safety_checkin_pending', false);
+    final levelKey = prefs.getString('safety_level') ?? 'uncomfortable';
+    final level = threatLevelFromKey(levelKey);
+    if (level != ThreatLevel.none && mounted) {
+      SafetyCheckinPopup.show(context, currentLevel: level);
+    }
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _clockTimer?.cancel();
     _refreshTimer?.cancel();
+    _safetyEventSub?.cancel();
     _pulseController.dispose();
     super.dispose();
   }
@@ -414,6 +460,27 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     ),
                   ),
                 ],
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          // SOS Button — always visible, one tap to open Safety Mode
+          GestureDetector(
+            onTap: () => SafetyModeScreen.show(context),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFF2D2D),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Text(
+                'SOS',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white,
+                  letterSpacing: 1.5,
+                ),
               ),
             ),
           ),
