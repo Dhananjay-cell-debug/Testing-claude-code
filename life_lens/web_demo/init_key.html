@@ -1,0 +1,13 @@
+<!DOCTYPE html><html><head><title>LifeLens Key Setup</title></head>
+<body style="font-family:sans-serif;background:#12122A;color:#C5F135;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;">
+<div style="text-align:center;">
+<div style="font-size:32px;margin-bottom:16px;">⚡</div>
+<div id="msg" style="font-size:16px;font-weight:700;">Setting up API key...</div>
+<script>
+// Paste your Claude API key below (get it from console.anthropic.com)
+var apiKey = prompt('Enter your Claude API key:');
+if(apiKey) localStorage.setItem('ll_key', apiKey);
+document.getElementById('msg').textContent='API key saved to browser!';
+setTimeout(()=>location.href='/',1200);
+</script>
+</div></body></html>
