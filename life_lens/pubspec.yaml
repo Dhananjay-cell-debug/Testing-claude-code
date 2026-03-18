@@ -55,7 +55,7 @@ dependencies:
   pedometer: ^4.0.1
 
   # Audio recording (silent background recording for safety)
-  record: ">=5.0.0 <5.1.0"
+  record: ^5.1.2
 
   # File paths for recording storage
   path_provider: ^2.1.4

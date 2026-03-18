@@ -37,6 +37,45 @@ jobs:
         working-directory: life_lens
         run: flutter pub get
 
+      - name: Patch record_linux compatibility
+        run: |
+          python3 << 'EOF'
+          import os, glob
+
+          pub_cache = os.path.expanduser("~/.pub-cache/hosted")
+          files = glob.glob(f"{pub_cache}/**/record_linux-*/lib/record_linux.dart", recursive=True)
+
+          for path in files:
+              with open(path, 'r') as f:
+                  content = f.read()
+              modified = content
+
+              # Fix 1: hasPermission missing named param {bool request = true}
+              modified = modified.replace(
+                  'Future<bool> hasPermission(String recorderId) {',
+                  'Future<bool> hasPermission(String recorderId, {bool request = true}) {'
+              )
+
+              # Fix 2: add startStream stub if missing
+              if 'startStream' not in modified and 'RecordPlatform' in modified:
+                  if "import 'dart:typed_data'" not in modified:
+                      modified = "import 'dart:typed_data';\n" + modified
+                  modified = modified.replace(
+                      'class RecordLinux extends RecordPlatform {',
+                      'class RecordLinux extends RecordPlatform {\n'
+                      '  @override\n'
+                      '  Future<Stream<Uint8List>> startStream(String recorderId, RecordConfig config) async {\n'
+                      '    return Stream<Uint8List>.empty();\n'
+                      '  }\n'
+                  )
+
+              if modified != content:
+                  with open(path, 'w') as f:
+                      f.write(modified)
+                  print(f"Patched: {path}")
+          print("record_linux patch done.")
+          EOF
+
       - name: Fix Flutter plugin compatibility issues
         run: |
           python3 << 'EOF'
