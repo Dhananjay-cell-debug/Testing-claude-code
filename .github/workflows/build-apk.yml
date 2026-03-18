@@ -44,7 +44,7 @@ jobs:
 
           # Replace all flutter.xxx Gradle properties with hardcoded values
           FLUTTER_PROPS = {
-              'flutter.compileSdkVersion': '34',
+              'flutter.compileSdkVersion': '35',
               'flutter.minSdkVersion':     '21',
               'flutter.targetSdkVersion':  '34',
               'flutter.versionCode':       '1',
