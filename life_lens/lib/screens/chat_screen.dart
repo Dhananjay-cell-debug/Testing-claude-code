@@ -188,8 +188,8 @@ class _CoachScreenState extends State<CoachScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('AI COACH', style: AppTextStyles.label.copyWith(color: AppColors.primary)),
-                Text('Your personal life strategist', style: AppTextStyles.body.copyWith(fontSize: 12)),
+                Text('DRISHTI', style: AppTextStyles.label.copyWith(color: AppColors.primary)),
+                Text('Your personal AI companion', style: AppTextStyles.body.copyWith(fontSize: 12)),
               ],
             ),
           ),

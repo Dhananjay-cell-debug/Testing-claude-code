@@ -463,27 +463,6 @@ class _HomeScreenState extends State<HomeScreen>
               ),
             ),
           ),
-          const SizedBox(width: 8),
-          // SOS Button — always visible, one tap to open Safety Mode
-          GestureDetector(
-            onTap: () => SafetyModeScreen.show(context),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFF2D2D),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: const Text(
-                'SOS',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.white,
-                  letterSpacing: 1.5,
-                ),
-              ),
-            ),
-          ),
         ],
       ),
     );
@@ -1066,7 +1045,7 @@ class _HomeScreenState extends State<HomeScreen>
               ),
               _FluxNavItem(
                 icon: Icons.psychology_rounded,
-                label: 'Coach',
+                label: 'Drishti',
                 selected: _selectedNav == 2,
                 onTap: () => setState(() => _selectedNav = 2),
               ),
